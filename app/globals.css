@@ -1,11 +1,60 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
-  padding: 0;
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
-  overflow: hidden; /* Prevent scrolling */
+  font-family: 'Inter', sans-serif;
+  background-color: #0a0a0a;
+  color: #e5e7eb;
+  overflow: hidden;
 }
 
-* {
-  box-sizing: border-box;
+/* Control button styles */
+.control-btn {
+  @apply w-10 h-10 bg-white/10 backdrop-blur border border-white/20 rounded-lg flex items-center justify-center text-white hover:bg-white/20 transition-all;
+}
+
+/* Ensure gesture handlers can call preventDefault */
+.interactive-touch-none {
+  touch-action: none;
+}
+
+/* Mobile responsiveness improvements */
+@media (max-width: 767px) {
+  /* Make control buttons more mobile-friendly */
+  .control-btn {
+    @apply w-12 h-12 text-lg;
+  }
+  
+  /* Ensure mobile viewport doesn't scroll */
+  body {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  
+  /* Optimize touch targets for mobile */
+  svg polygon {
+    stroke-width: 3;
+    pointer-events: all;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet optimizations */
+  .control-btn {
+    @apply w-11 h-11;
+  }
+}
+
+/* Improve polygon visibility on all devices */
+svg polygon {
+  transition: all 0.15s ease-in-out;
+}
+
+svg polygon:hover {
+  stroke-width: 2;
 }

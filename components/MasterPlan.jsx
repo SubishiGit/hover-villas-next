@@ -1,151 +1,196 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
+import { InteractiveCanvas } from "./InteractiveCanvas";
+import { useProgressiveImage } from "./ImageLoader";
+import { VirtualizedPlots } from "./VirtualizedPlots";
 import { extractVillaKey } from "./idUtil";
-
-// Define our color palette, now including highlight colors for special zones
-const COLOR_MAP = {
-  // Villa status colors
-  "Available": "rgba(0, 255, 255, 0.6)",
-  "Hold": "rgba(255, 255, 0, 0.6)",
-  "Sold": "rgba(255, 0, 0, 0.6)",
-  // Special zone highlight colors
-  "ClubhouseHighlight": "rgba(168, 85, 247, 0.7)", // A distinct purple
-  "CanalHighlight": "rgba(59, 130, 246, 0.7)",      // A nice blue
-};
-
-// This helper function now handles titles for all plot types
-function titleForPlot(plot) {
-  if (!plot) return "";
-  if (plot.plotType === 'clubhouse') return "Clubhouse";
-  if (plot.plotType === 'canal') return "Canal/Landscaping Zone";
-  
-  const k = extractVillaKey(plot.id);
-  return k ? `Villa No. ${k}` : plot.id.replace(/_/g, " ");
-}
+import { AnimatePresence } from "framer-motion";
+import { Tooltip } from "./Tooltip";
 
 export default function MasterPlan({ mapData, sheetRows = [] }) {
   const [activePlot, setActivePlot] = useState(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [currentZoom, setCurrentZoom] = useState(1);
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   
-  const byKey = useMemo(() => {
-    const m = new Map();
-    for (const r of sheetRows) {
-      const key = extractVillaKey(r.id);
-      if (key) {
-        m.set(key, r);
-      }
+  // Progressive image loading
+  const { currentSrc, isLoading } = useProgressiveImage('/BaseLayer');
+  
+  // Track container size for responsive behavior
+  useEffect(() => {
+    const updateSize = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      setContainerSize({ width, height });
+    };
+    
+    updateSize();
+    window.addEventListener('resize', updateSize);
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+  
+  // Memoized aspect ratio calculation
+  const aspectRatio = useMemo(() => {
+    if (!mapData.viewBox) return "16 / 9";
+    const [, , width, height] = mapData.viewBox.split(' ').map(Number);
+    return width && height ? `${width} / ${height}` : "16 / 9";
+  }, [mapData.viewBox]);
+  
+  // Calculate responsive dimensions
+  const responsiveDimensions = useMemo(() => {
+    const isMobile = containerSize.width < 768;
+    const isTablet = containerSize.width >= 768 && containerSize.width < 1024;
+    
+    if (isMobile) {
+      // Mobile: Use full screen width, let height adjust naturally
+      return {
+        width: '100%',
+        minWidth: 'auto',
+        minHeight: 'auto',
+        maxWidth: 'none',
+        aspectRatio: aspectRatio
+      };
+    } else if (isTablet) {
+      // Tablet: Slightly larger minimum with responsive scaling
+      return {
+        width: '100%',
+        minWidth: '600px',
+        minHeight: '400px', 
+        maxWidth: '900px',
+        aspectRatio: aspectRatio
+      };
+    } else {
+      // Desktop: Current behavior but with responsive max
+      return {
+        width: '100%',
+        minWidth: '800px',
+        minHeight: '500px',
+        maxWidth: '1800px',
+        aspectRatio: aspectRatio
+      };
     }
-    return m;
+  }, [containerSize.width, aspectRatio]);
+  
+  
+  // Optimized villa data mapping with caching
+  const villaDataMap = useMemo(() => {
+    const map = new Map();
+    for (const row of sheetRows) {
+      const key = extractVillaKey(row.id);
+      if (key) map.set(key, row);
+    }
+    return map;
   }, [sheetRows]);
 
-  // This is the core logic update. We now process every plot from the JSON
-  // and enrich it with its type, data, and highlight color.
+  // Derived plots with performance optimization
   const derivedPlots = useMemo(() => {
     if (!mapData.plots) return [];
     
     return mapData.plots.map(plot => {
-      const id = plot.id;
-      let plotType = 'villa'; // Assume it's a villa by default
-      let color = 'transparent';
-
-      // Categorize the plot based on its ID
-      if (/CLUBHOUSE/i.test(id)) {
+      let plotType = 'villa', color = 'transparent', sheetData = null;
+      
+      if (/CLUBHOUSE/i.test(plot.id)) {
         plotType = 'clubhouse';
-        color = COLOR_MAP.ClubhouseHighlight;
-      } else if (/CANAL|LANDSCAPE/i.test(id)) {
+        color = "rgba(168, 85, 247, 0.7)";
+      } else if (/CANAL|LANDSCAPE/i.test(plot.id)) {
         plotType = 'canal';
-        color = COLOR_MAP.CanalHighlight;
+        color = "rgba(59, 130, 246, 0.7)";
       } else {
-        // It's a villa, so get its data and color from the sheet
-        const key = extractVillaKey(id);
-        const sheetData = key ? byKey.get(key) : null;
-        const availability = sheetData?.availability || "Available";
-        color = COLOR_MAP[availability] || 'transparent';
-
-        return { ...plot, plotType, sheetData, color, availability };
+        const key = extractVillaKey(plot.id);
+        sheetData = key ? villaDataMap.get(key) : null;
+        
+        if (sheetData) {
+          switch (sheetData.availability) {
+            case "Sold": color = "rgba(255, 0, 0, 0.6)"; break;
+            case "Blocked": color = "rgba(255, 255, 0, 0.6)"; break;
+            default: color = "rgba(0, 255, 255, 0.6)";
+          }
+        }
       }
-
-      // Return the enriched object for special zones
-      return { ...plot, plotType, color, sheetData: null };
+      
+      return { ...plot, plotType, sheetData, color };
     });
-  }, [mapData, byKey]);
+  }, [mapData.plots, villaDataMap]);
 
-  // This new memo hook calculates which plot IDs should be highlighted.
-  // This is the key to group highlighting.
-  const highlightedIds = useMemo(() => {
-    if (!activePlot) return new Set(); // If nothing is hovered, highlight nothing
+  // Optimized mouse handlers
+  const handleMouseMove = useCallback((e) => {
+    setMousePosition({ x: e.clientX, y: e.clientY });
+  }, []);
 
-    // If the hovered plot is a canal, find ALL canal plots and return their IDs
-    if (activePlot.plotType === 'canal') {
-      const canalIds = derivedPlots
-        .filter(p => p.plotType === 'canal')
-        .map(p => p.id);
-      return new Set(canalIds);
-    }
+  const handleMouseLeave = useCallback(() => {
+    setActivePlot(null);
+  }, []);
 
-    // Otherwise, just highlight the single active plot (villa or clubhouse)
-    return new Set([activePlot.id]);
-  }, [activePlot, derivedPlots]);
+  const handlePlotHover = useCallback((plot) => {
+    setActivePlot(plot);
+  }, []);
 
   return (
-    <div style={{ position: "fixed", inset: 0, background: "#0a0a0a" }}>
-      <div style={{ position: "relative", width: "100%", height: "100%", overflow: "hidden" }}>
-        <img
-          src="/BaseLayer-small.png"
-          alt="Master Plan"
-          style={{ width: "100%", height: "100%", objectFit: "contain" }}
-        />
-        <svg
-          viewBox={mapData.viewBox}
-          preserveAspectRatio="xMidYMid meet"
-          style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
-          onMouseLeave={() => setActivePlot(null)}
-        >
-          <g>
-            {derivedPlots.map((plot) => {
-              // A plot is highlighted if its ID is in our 'highlightedIds' set
-              const isHighlighted = highlightedIds.has(plot.id);
-              
-              return (
-                <polygon
-                  key={plot.id}
-                  points={plot.points}
-                  style={{
-                    fill: isHighlighted ? plot.color : 'transparent',
-                    stroke: isHighlighted ? 'white' : 'rgba(255, 255, 255, 0.2)',
-                    strokeWidth: isHighlighted ? 2 : 1,
-                    cursor: 'pointer',
-                    transition: 'fill 0.15s ease, stroke 0.15s ease',
-                  }}
-                  onMouseEnter={() => setActivePlot(plot)}
-                />
-              );
-            })}
-          </g>
-        </svg>
-
-        {/* The info box now appears for ANY active plot, not just those with sheet data */}
-        {activePlot && (
-          <div style={{ position: "absolute", left: 16, bottom: 16, background: "rgba(0,0,0,0.8)", padding: 16, borderRadius: 10, color: "#fff", fontFamily: "sans-serif" }}>
-            <div style={{ fontWeight: 800, fontSize: "1.2rem", marginBottom: 8 }}>{titleForPlot(activePlot)}</div>
-            
-            {/* Conditionally render villa details ONLY if the plot is a villa */}
-            {activePlot.plotType === 'villa' && activePlot.sheetData && (
-              <>
-                <div style={{ marginBottom: '4px' }}>
-                  <strong>Status:</strong> 
-                  <span style={{ color: activePlot.color, paddingLeft: '8px', fontWeight: 'bold' }}>
-                    {activePlot.availability}
-                  </span>
-                </div>
-                {activePlot.sheetData.facing && <div><strong>Facing:</strong> {activePlot.sheetData.facing}</div>}
-                {activePlot.sheetData.sqft && <div><strong>SQFT:</strong> {activePlot.sheetData.sqft}</div>}
-                {activePlot.sheetData.plotSize && <div><strong>Plot Size (SqYds):</strong> {activePlot.sheetData.plotSize}</div>}
-              </>
-            )}
+    <div className="w-full h-full relative">
+      {/* Loading State */}
+      {isLoading && (
+        <div className="absolute inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="text-white text-center">
+            <div className="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full mx-auto mb-4" />
+            <p>Loading Master Plan...</p>
           </div>
+        </div>
+      )}
+
+      <InteractiveCanvas
+        minZoom={containerSize.width < 768 ? 0.5 : 0.1}
+        maxZoom={containerSize.width < 768 ? 3 : 10}
+        initialZoom={1}
+        bounds="auto"
+        onZoomChange={setCurrentZoom}
+      >
+        <div 
+          style={{ 
+            position: 'relative',
+            ...responsiveDimensions
+          }}
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          {/* Base Layer Image */}
+          <img
+            src={currentSrc}
+            alt="Master Plan Base Layer"
+            style={{ 
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              userSelect: 'none',
+              pointerEvents: 'none'
+            }}
+            draggable={false}
+          />
+
+          {/* Interactive Plot Layer */}
+          <VirtualizedPlots
+            plots={derivedPlots}
+            viewBox={mapData.viewBox}
+            currentZoom={currentZoom}
+            onPlotHover={handlePlotHover}
+            activePlotId={activePlot?.id}
+          />
+        </div>
+      </InteractiveCanvas>
+
+      {/* Enhanced Tooltip */}
+      <AnimatePresence>
+        {activePlot && (
+          <Tooltip 
+            activePlot={activePlot} 
+            position={mousePosition}
+            zoomLevel={currentZoom}
+          />
         )}
-      </div>
+      </AnimatePresence>
     </div>
   );
 }

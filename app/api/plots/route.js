@@ -1,13 +1,22 @@
 import { google } from "googleapis";
 import { NextResponse } from "next/server";
 
-// This function translates the sheet data (0, 1, 2, "Premium") into clear strings.
-function normalizeStatus(status) {
+// This function determines availability based on status values
+function normalizeAvailability(status) {
   const s = String(status || "").trim().toLowerCase();
+  
   if (s === '2') return "Sold";
-  if (s === '1') return "Hold";
+  if (s === '1') return "Blocked";
   if (s === '0' || s === 'premium') return "Available";
-  return "Available"; // Default to Available if the cell is empty or has another value
+  
+  // Default case
+  return "Available";
+}
+
+// This function determines villa type based on plot size (SqYds)
+function determineType(plotSize) {
+  const size = parseFloat(String(plotSize || "0").trim());
+  return size > 500 ? "Premium" : "Standard";
 }
 
 export async function GET(req) {
@@ -43,12 +52,18 @@ export async function GET(req) {
       const L = rowsL[i] || [];
       const R = rowsR[i] || [];
       if (!L[0]) continue;
+      
+      const plotSizeValue = String(R[1] || "").trim();    // Column E (SqYds)
+      const availability = normalizeAvailability(R[2]);   // Column F (status)
+      const type = determineType(plotSizeValue);          // Based on plot size
+      
       rows.push({
         id: String(L[0] || "").trim(),          // Column A (e.g., V_121)
         facing: String(L[1] || "").trim(),      // Column B
         sqft: String(R[0] || "").trim(),        // Column D
-        plotSize: String(R[1] || "").trim(),    // Column E
-        availability: normalizeStatus(R[2])     // Column F
+        plotSize: plotSizeValue,                // Column E
+        availability: availability,
+        type: type
       });
     }
 

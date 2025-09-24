@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import MasterPlan from "../components/MasterPlan";
+import OrientationLock from "../components/OrientationLock";
 
 async function getSheetData() {
   const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
@@ -31,8 +32,10 @@ export default async function HomePage() {
   ]);
 
   return (
-    <main>
-      <MasterPlan mapData={mapData} sheetRows={sheetRows} />
-    </main>
+    <OrientationLock>
+      <main className="w-screen h-screen bg-black flex items-center justify-center sm:p-4 p-0">
+        <MasterPlan mapData={mapData} sheetRows={sheetRows} />
+      </main>
+    </OrientationLock>
   );
 }
