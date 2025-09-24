@@ -27,19 +27,32 @@ export function Tooltip({ activePlot, position, zoomLevel = 1 }) {
     if (activePlot && tooltipRef.current) {
       const { innerWidth, innerHeight } = window;
       const { offsetWidth, offsetHeight } = tooltipRef.current;
-      let top = position.y + 20;
-      let left = position.x + 20;
       
-      if (left + offsetWidth > innerWidth - 20) { 
-        left = position.x - offsetWidth - 20; 
+      // Adjust offset based on zoom level - closer when zoomed in, further when zoomed out
+      const baseOffset = 20;
+      const zoomAdjustedOffset = Math.max(15, Math.min(40, baseOffset / Math.max(0.5, zoomLevel)));
+      
+      let top = position.y + zoomAdjustedOffset;
+      let left = position.x + zoomAdjustedOffset;
+      
+      // Enhanced boundary checking with margins
+      const margin = 15;
+      if (left + offsetWidth > innerWidth - margin) { 
+        left = position.x - offsetWidth - zoomAdjustedOffset; 
       }
-      if (top + offsetHeight > innerHeight - 20) { 
-        top = position.y - offsetHeight - 20; 
+      if (top + offsetHeight > innerHeight - margin) { 
+        top = position.y - offsetHeight - zoomAdjustedOffset; 
       }
+      
+      // Ensure tooltip never goes completely off-screen
+      if (left < margin) left = margin;
+      if (top < margin) top = margin;
+      if (left + offsetWidth > innerWidth - margin) left = innerWidth - offsetWidth - margin;
+      if (top + offsetHeight > innerHeight - margin) top = innerHeight - offsetHeight - margin;
       
       setTooltipStyle({ top, left });
     }
-  }, [activePlot, position]);
+  }, [activePlot, position, zoomLevel]);
 
   if (!activePlot) return null;
 
