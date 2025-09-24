@@ -21,14 +21,27 @@ export function InteractiveCanvas({
     x: 0,
     y: 0,
     scale: initialZoom,
-    config: { tension: 300, friction: 30, precision: 0.01 },
-    onChange: ({ value }) => {
-      // Notify parent component of zoom changes
-      if (onZoomChange && value.scale !== undefined) {
-        onZoomChange(Number(value.scale));
-      }
-    }
+    config: { tension: 300, friction: 30, precision: 0.01 }
   }));
+  
+  // Track zoom changes using a separate state
+  const [currentZoom, setCurrentZoom] = useState(initialZoom);
+  
+  // Monitor scale changes and notify parent
+  useEffect(() => {
+    const checkZoomChange = () => {
+      const newZoom = Number(scale.get());
+      if (Math.abs(newZoom - currentZoom) > 0.01) {
+        setCurrentZoom(newZoom);
+        if (onZoomChange) {
+          onZoomChange(newZoom);
+        }
+      }
+    };
+    
+    const interval = setInterval(checkZoomChange, 100);
+    return () => clearInterval(interval);
+  }, [scale, currentZoom, onZoomChange]);
 
   useEffect(() => {
     const updateBounds = () => {
@@ -45,20 +58,23 @@ export function InteractiveCanvas({
   const calculateBounds = useCallback((currentScale) => {
     const s = Number.isFinite(currentScale) ? currentScale : 1;
     if (bounds === 'auto' && containerBounds.width > 0 && containerBounds.height > 0) {
+      // Allow more generous scrolling bounds for better mobile experience
       const scaledWidth = containerBounds.width * s;
       const scaledHeight = containerBounds.height * s;
+      const extraMargin = Math.min(containerBounds.width, containerBounds.height) * 0.1; // 10% margin
+      
       return {
-        left: Math.min(0, containerBounds.width - scaledWidth),
-        right: Math.max(0, scaledWidth - containerBounds.width),
-        top: Math.min(0, containerBounds.height - scaledHeight),
-        bottom: Math.max(0, scaledHeight - containerBounds.height)
+        left: Math.min(-extraMargin, containerBounds.width - scaledWidth - extraMargin),
+        right: Math.max(extraMargin, scaledWidth - containerBounds.width + extraMargin),
+        top: Math.min(-extraMargin, containerBounds.height - scaledHeight - extraMargin),
+        bottom: Math.max(extraMargin, scaledHeight - containerBounds.height + extraMargin)
       };
     }
     return bounds;
   }, [bounds, containerBounds]);
 
   const bind = useGesture({
-    onDrag: ({ offset: [dx, dy] }) => {
+    onDrag: ({ offset: [dx, dy], active }) => {
       const currentScale = Number(scale.get() ?? initialZoom);
       const smart = calculateBounds(currentScale);
       let nx = dx, ny = dy;
@@ -66,7 +82,12 @@ export function InteractiveCanvas({
         nx = Math.max(smart.left, Math.min(smart.right, nx));
         ny = Math.max(smart.top, Math.min(smart.bottom, ny));
       }
-      api.start({ x: nx, y: ny });
+      api.start({ 
+        x: nx, 
+        y: ny,
+        immediate: active, // Immediate updates while dragging for responsiveness
+        config: active ? { tension: 400, friction: 40 } : { tension: 300, friction: 30 }
+      });
     },
     onPinch: ({ offset: [pinchScale], origin: [ox, oy], movement: [mx, my], memo }) => {
       if (!memo) {
@@ -115,14 +136,15 @@ export function InteractiveCanvas({
     }
   }, {
     drag: { 
-      threshold: 5,
+      threshold: 3, // Lower threshold for more responsive dragging
       filterTaps: true,
-      rubberband: true
+      rubberband: 0.1, // Gentle rubberband for better UX
+      bounds: () => calculateBounds(Number(scale.get() ?? initialZoom))
     },
     pinch: { 
-      threshold: 0.1,
+      threshold: 0.05, // More sensitive pinch detection
       scaleBounds: { min: minZoom, max: maxZoom },
-      rubberband: true
+      rubberband: 0.1
     }
   });
 

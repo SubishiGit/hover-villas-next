@@ -33,7 +33,15 @@ export default async function HomePage() {
 
   return (
     <OrientationLock>
-      <main className="w-screen h-screen bg-black flex items-center justify-center sm:p-4 p-0">
+      <main className="w-screen h-screen bg-black flex items-center justify-center overflow-hidden" style={{
+        minHeight: '100vh',
+        minHeight: '100dvh', // Dynamic viewport height for mobile
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
+      }}>
         <MasterPlan mapData={mapData} sheetRows={sheetRows} />
       </main>
     </OrientationLock>
