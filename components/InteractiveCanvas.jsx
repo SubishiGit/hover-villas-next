@@ -89,8 +89,8 @@ export function InteractiveCanvas({
         config: active ? { tension: 400, friction: 40 } : { tension: 300, friction: 30 }
       });
     },
-    onPinch: ({ offset: [pinchScale], origin: [ox, oy], movement: [mx, my], memo }) => {
-      if (!memo) {
+    onPinch: ({ offset: [d, a], origin: [ox, oy], first, memo }) => {
+      if (first || !memo) {
         memo = { 
           x: Number(x.get() ?? 0), 
           y: Number(y.get() ?? 0), 
@@ -103,20 +103,23 @@ export function InteractiveCanvas({
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return memo;
       
-      // Calculate gesture center movement (article's insight)
+      // Calculate gesture center movement
       const centerDeltaX = ox - memo.centerX;
       const centerDeltaY = oy - memo.centerY;
       
-      const newScale = Math.max(minZoom, Math.min(maxZoom, Number(pinchScale) || memo.scale || 1));
-      const scaleRatio = newScale / (memo.scale || 1);
+      // Simple fix: invert the pinch scale value
+      // If d > 1, it means fingers moved apart, so zoom in
+      // If d < 1, it means fingers moved together, so zoom out
+      const newScale = Math.max(minZoom, Math.min(maxZoom, memo.scale * d));
       
-      // Apply coordinate transformation from article
-      // Offset After = Offset Before + (Scale Before * Content Coordinate) - (Scale After * Content Coordinate)
-      const contentX = (ox - rect.width / 2 - memo.x) / memo.scale;
-      const contentY = (oy - rect.height / 2 - memo.y) / memo.scale;
+      // Enhanced coordinate transformation with center tracking
+      const scaleRatio = newScale / memo.scale;
+      const containerCenterX = rect.width / 2;
+      const containerCenterY = rect.height / 2;
       
-      const newX = memo.x + (memo.scale * contentX) - (newScale * contentX) + centerDeltaX;
-      const newY = memo.y + (memo.scale * contentY) - (newScale * contentY) + centerDeltaY;
+      // Apply precise transformation accounting for gesture center movement
+      const newX = memo.x + (ox - containerCenterX) * (1 - scaleRatio) + centerDeltaX;
+      const newY = memo.y + (oy - containerCenterY) * (1 - scaleRatio) + centerDeltaY;
       
       // Apply bounds checking
       const smart = calculateBounds(newScale);
@@ -126,7 +129,12 @@ export function InteractiveCanvas({
         boundedY = Math.max(smart.top, Math.min(smart.bottom, newY));
       }
       
-      api.start({ scale: newScale, x: boundedX, y: boundedY });
+      api.start({ 
+        scale: newScale, 
+        x: boundedX, 
+        y: boundedY,
+        config: { tension: 350, friction: 30 }
+      });
       
       // Update memo for next iteration
       memo.centerX = ox;
@@ -136,19 +144,19 @@ export function InteractiveCanvas({
     }
   }, {
     drag: { 
-      threshold: 3, // Lower threshold for more responsive dragging
+      threshold: 5, // Slightly higher to prevent conflict with pinch
       filterTaps: true,
-      rubberband: 0.1, // Gentle rubberband for better UX
+      rubberband: 0.1,
       bounds: () => calculateBounds(Number(scale.get() ?? initialZoom))
     },
     pinch: { 
-      threshold: 0.05, // More sensitive pinch detection
+      threshold: 0.05,
       scaleBounds: { min: minZoom, max: maxZoom },
       rubberband: 0.1
     }
   });
 
-  // Mouse-centered zoom implementation based on article's coordinate transformation
+  // Enhanced mouse-centered zoom with better precision
   useEffect(() => {
     const handleWheel = (event) => {
       event.preventDefault();
@@ -157,31 +165,42 @@ export function InteractiveCanvas({
       const rect = containerRef.current?.getBoundingClientRect();
       if (!rect) return;
       
-      // Get mouse position relative to container
+      // Get precise mouse position relative to container
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;
       
-      // Get current transform state
+      // Get current transform state with higher precision
       const currentScale = Number(scale.get() ?? initialZoom);
       const currentX = Number(x.get() ?? 0);
       const currentY = Number(y.get() ?? 0);
       
-      // Calculate new scale
-      const intensity = event.ctrlKey ? 0.002 : 0.001;
-      const newScale = Math.max(minZoom, Math.min(maxZoom, currentScale - event.deltaY * intensity));
+      // More precise zoom calculation with variable intensity
+      let intensity;
+      if (event.ctrlKey || event.metaKey) {
+        intensity = 0.005; // Faster zoom with modifier keys
+      } else {
+        // Adaptive intensity based on current zoom level
+        intensity = Math.max(0.0008, Math.min(0.003, 0.001 * (1 + currentScale * 0.5)));
+      }
       
-      if (newScale === currentScale) return; // No change needed
+      const deltaScale = -event.deltaY * intensity;
+      const newScale = Math.max(minZoom, Math.min(maxZoom, currentScale + deltaScale));
       
-      // Article's coordinate transformation:
-      // Offset After = Offset Before + (Scale Before * Content Coordinate) - (Scale After * Content Coordinate)
+      if (Math.abs(newScale - currentScale) < 0.001) return; // Prevent micro-changes
       
-      // Calculate content coordinate (mouse position in content space)
-      const contentX = (mouseX - rect.width / 2 - currentX) / currentScale;
-      const contentY = (mouseY - rect.height / 2 - currentY) / currentScale;
+      // High-precision coordinate transformation
+      // Calculate exact content coordinate under mouse
+      const containerCenterX = rect.width / 2;
+      const containerCenterY = rect.height / 2;
       
-      // Apply transformation
-      const newX = currentX + (currentScale * contentX) - (newScale * contentX);
-      const newY = currentY + (currentScale * contentY) - (newScale * contentY);
+      // Content coordinate = (mouse position - container center - current offset) / current scale
+      const contentX = (mouseX - containerCenterX - currentX) / currentScale;
+      const contentY = (mouseY - containerCenterY - currentY) / currentScale;
+      
+      // Apply precise transformation
+      const scaleRatio = newScale / currentScale;
+      const newX = currentX + (mouseX - containerCenterX) * (1 - scaleRatio);
+      const newY = currentY + (mouseY - containerCenterY) * (1 - scaleRatio);
       
       // Apply bounds checking
       const smart = calculateBounds(newScale);
@@ -191,7 +210,13 @@ export function InteractiveCanvas({
         boundedY = Math.max(smart.top, Math.min(smart.bottom, newY));
       }
       
-      api.start({ scale: newScale, x: boundedX, y: boundedY });
+      // Smooth animation with precise config
+      api.start({ 
+        scale: newScale, 
+        x: boundedX, 
+        y: boundedY,
+        config: { tension: 400, friction: 35, precision: 0.0001 }
+      });
     };
 
     const element = containerRef.current;
@@ -210,59 +235,97 @@ export function InteractiveCanvas({
   }, [scale, x, y, api, minZoom, maxZoom, initialZoom, calculateBounds]);
 
   const controls = {
-    zoomIn: (factor = 1.5, centerPoint = null) => {
+    zoomIn: (factor = 1.3, centerPoint = null) => {
       const current = Number(scale.get() ?? initialZoom);
       const newScale = Math.min(maxZoom, current * factor);
       
       if (centerPoint) {
-        // Use provided center point (e.g., for button clicks at screen center)
+        // Use provided center point with precise transformation
         const currentX = Number(x.get() ?? 0);
         const currentY = Number(y.get() ?? 0);
         const { width, height } = containerBounds;
         
-        const contentX = (centerPoint.x - width / 2 - currentX) / current;
-        const contentY = (centerPoint.y - height / 2 - currentY) / current;
+        const scaleRatio = newScale / current;
+        const newX = currentX + (centerPoint.x - width / 2) * (1 - scaleRatio);
+        const newY = currentY + (centerPoint.y - height / 2) * (1 - scaleRatio);
         
-        const newX = currentX + (current * contentX) - (newScale * contentX);
-        const newY = currentY + (current * contentY) - (newScale * contentY);
+        // Apply bounds
+        const smart = calculateBounds(newScale);
+        let boundedX = newX, boundedY = newY;
+        if (smart) {
+          boundedX = Math.max(smart.left, Math.min(smart.right, newX));
+          boundedY = Math.max(smart.top, Math.min(smart.bottom, newY));
+        }
         
-        api.start({ scale: newScale, x: newX, y: newY });
+        api.start({ 
+          scale: newScale, 
+          x: boundedX, 
+          y: boundedY,
+          config: { tension: 300, friction: 30 }
+        });
       } else {
         // Default: zoom to center
-        api.start({ scale: Number.isFinite(newScale) ? newScale : initialZoom });
+        api.start({ 
+          scale: Number.isFinite(newScale) ? newScale : initialZoom,
+          config: { tension: 300, friction: 30 }
+        });
       }
     },
-    zoomOut: (factor = 1.5, centerPoint = null) => {
+    zoomOut: (factor = 1.3, centerPoint = null) => {
       const current = Number(scale.get() ?? initialZoom);
       const newScale = Math.max(minZoom, current / factor);
       
       if (centerPoint) {
-        // Use provided center point
+        // Use provided center point with precise transformation
         const currentX = Number(x.get() ?? 0);
         const currentY = Number(y.get() ?? 0);
         const { width, height } = containerBounds;
         
-        const contentX = (centerPoint.x - width / 2 - currentX) / current;
-        const contentY = (centerPoint.y - height / 2 - currentY) / current;
+        const scaleRatio = newScale / current;
+        const newX = currentX + (centerPoint.x - width / 2) * (1 - scaleRatio);
+        const newY = currentY + (centerPoint.y - height / 2) * (1 - scaleRatio);
         
-        const newX = currentX + (current * contentX) - (newScale * contentX);
-        const newY = currentY + (current * contentY) - (newScale * contentY);
+        // Apply bounds
+        const smart = calculateBounds(newScale);
+        let boundedX = newX, boundedY = newY;
+        if (smart) {
+          boundedX = Math.max(smart.left, Math.min(smart.right, newX));
+          boundedY = Math.max(smart.top, Math.min(smart.bottom, newY));
+        }
         
-        api.start({ scale: newScale, x: newX, y: newY });
+        api.start({ 
+          scale: newScale, 
+          x: boundedX, 
+          y: boundedY,
+          config: { tension: 300, friction: 30 }
+        });
       } else {
         // Default: zoom from center
-        api.start({ scale: Number.isFinite(newScale) ? newScale : initialZoom });
+        api.start({ 
+          scale: Number.isFinite(newScale) ? newScale : initialZoom,
+          config: { tension: 300, friction: 30 }
+        });
       }
     },
     reset: () => {
-      api.start({ x: 0, y: 0, scale: initialZoom });
+      api.start({ 
+        x: 0, 
+        y: 0, 
+        scale: initialZoom,
+        config: { tension: 250, friction: 25 }
+      });
     },
     fitToView: () => {
       const { width, height } = containerBounds;
       if (!width || !height) return;
       const optimal = Math.min(width / 1000, height / 600);
       const safe = Number.isFinite(optimal) && optimal > 0 ? optimal : 1;
-      api.start({ x: 0, y: 0, scale: safe });
+      api.start({ 
+        x: 0, 
+        y: 0, 
+        scale: safe,
+        config: { tension: 250, friction: 25 }
+      });
     }
   };
 
