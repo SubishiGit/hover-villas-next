@@ -10,7 +10,8 @@ export function InteractiveCanvas({
   minZoom = 0.1, 
   maxZoom = 10, 
   initialZoom = 1,
-  bounds = 'auto'
+  bounds = 'auto',
+  onZoomChange
 }) {
   const containerRef = useRef();
   const animatedRef = useRef();
@@ -20,7 +21,13 @@ export function InteractiveCanvas({
     x: 0,
     y: 0,
     scale: initialZoom,
-    config: { tension: 300, friction: 30, precision: 0.01 }
+    config: { tension: 300, friction: 30, precision: 0.01 },
+    onChange: ({ value }) => {
+      // Notify parent component of zoom changes
+      if (onZoomChange && value.scale !== undefined) {
+        onZoomChange(Number(value.scale));
+      }
+    }
   }));
 
   useEffect(() => {
@@ -61,47 +68,112 @@ export function InteractiveCanvas({
       }
       api.start({ x: nx, y: ny });
     },
-    onPinch: ({ offset: [pinchScale], origin: [ox, oy], memo }) => {
+    onPinch: ({ offset: [pinchScale], origin: [ox, oy], movement: [mx, my], memo }) => {
       if (!memo) {
-        memo = { x: Number(x.get() ?? 0), y: Number(y.get() ?? 0), scale: Number(scale.get() ?? initialZoom) };
+        memo = { 
+          x: Number(x.get() ?? 0), 
+          y: Number(y.get() ?? 0), 
+          scale: Number(scale.get() ?? initialZoom),
+          centerX: ox,
+          centerY: oy
+        };
       }
-      const newScale = Math.max(minZoom, Math.min(maxZoom, Number(pinchScale) || memo.scale || 1));
-      const deltaScale = newScale / (memo.scale || 1);
-
+      
       const rect = containerRef.current?.getBoundingClientRect();
-      const centerX = rect ? rect.width / 2 : 0;
-      const centerY = rect ? rect.height / 2 : 0;
-      const deltaX = (ox - centerX) * (deltaScale - 1);
-      const deltaY = (oy - centerY) * (deltaScale - 1);
-
-      api.start({
-        scale: newScale,
-        x: memo.x - deltaX,
-        y: memo.y - deltaY
-      });
+      if (!rect) return memo;
+      
+      // Calculate gesture center movement (article's insight)
+      const centerDeltaX = ox - memo.centerX;
+      const centerDeltaY = oy - memo.centerY;
+      
+      const newScale = Math.max(minZoom, Math.min(maxZoom, Number(pinchScale) || memo.scale || 1));
+      const scaleRatio = newScale / (memo.scale || 1);
+      
+      // Apply coordinate transformation from article
+      // Offset After = Offset Before + (Scale Before * Content Coordinate) - (Scale After * Content Coordinate)
+      const contentX = (ox - rect.width / 2 - memo.x) / memo.scale;
+      const contentY = (oy - rect.height / 2 - memo.y) / memo.scale;
+      
+      const newX = memo.x + (memo.scale * contentX) - (newScale * contentX) + centerDeltaX;
+      const newY = memo.y + (memo.scale * contentY) - (newScale * contentY) + centerDeltaY;
+      
+      // Apply bounds checking
+      const smart = calculateBounds(newScale);
+      let boundedX = newX, boundedY = newY;
+      if (smart) {
+        boundedX = Math.max(smart.left, Math.min(smart.right, newX));
+        boundedY = Math.max(smart.top, Math.min(smart.bottom, newY));
+      }
+      
+      api.start({ scale: newScale, x: boundedX, y: boundedY });
+      
+      // Update memo for next iteration
+      memo.centerX = ox;
+      memo.centerY = oy;
+      
       return memo;
     }
   }, {
-    drag: { threshold: 5 },
-    pinch: { threshold: 0.1 }
+    drag: { 
+      threshold: 5,
+      filterTaps: true,
+      rubberband: true
+    },
+    pinch: { 
+      threshold: 0.1,
+      scaleBounds: { min: minZoom, max: maxZoom },
+      rubberband: true
+    }
   });
 
-  // Handle wheel events with proper passive: false, attached early to capture phase
+  // Mouse-centered zoom implementation based on article's coordinate transformation
   useEffect(() => {
     const handleWheel = (event) => {
-      // Stop the event from reaching React's event system
-      event.stopPropagation();
       event.preventDefault();
+      event.stopPropagation();
       
-      const current = Number(scale.get() ?? initialZoom);
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      // Get mouse position relative to container
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+      
+      // Get current transform state
+      const currentScale = Number(scale.get() ?? initialZoom);
+      const currentX = Number(x.get() ?? 0);
+      const currentY = Number(y.get() ?? 0);
+      
+      // Calculate new scale
       const intensity = event.ctrlKey ? 0.002 : 0.001;
-      const next = Math.max(minZoom, Math.min(maxZoom, current - event.deltaY * intensity));
-      api.start({ scale: next });
+      const newScale = Math.max(minZoom, Math.min(maxZoom, currentScale - event.deltaY * intensity));
+      
+      if (newScale === currentScale) return; // No change needed
+      
+      // Article's coordinate transformation:
+      // Offset After = Offset Before + (Scale Before * Content Coordinate) - (Scale After * Content Coordinate)
+      
+      // Calculate content coordinate (mouse position in content space)
+      const contentX = (mouseX - rect.width / 2 - currentX) / currentScale;
+      const contentY = (mouseY - rect.height / 2 - currentY) / currentScale;
+      
+      // Apply transformation
+      const newX = currentX + (currentScale * contentX) - (newScale * contentX);
+      const newY = currentY + (currentScale * contentY) - (newScale * contentY);
+      
+      // Apply bounds checking
+      const smart = calculateBounds(newScale);
+      let boundedX = newX, boundedY = newY;
+      if (smart) {
+        boundedX = Math.max(smart.left, Math.min(smart.right, newX));
+        boundedY = Math.max(smart.top, Math.min(smart.bottom, newY));
+      }
+      
+      api.start({ scale: newScale, x: boundedX, y: boundedY });
     };
 
     const element = containerRef.current;
     if (element) {
-      // Add listener in capture phase to intercept before React's synthetic events
       element.addEventListener('wheel', handleWheel, { 
         passive: false, 
         capture: true 
@@ -113,46 +185,52 @@ export function InteractiveCanvas({
         });
       };
     }
-  }, [scale, api, minZoom, maxZoom, initialZoom]);
-
-  // Also add a backup wheel handler to the document if the container method fails
-  useEffect(() => {
-    const handleDocumentWheel = (event) => {
-      // Only handle if the event target is within our container
-      if (containerRef.current && containerRef.current.contains(event.target)) {
-        event.stopPropagation();
-        event.preventDefault();
-        
-        const current = Number(scale.get() ?? initialZoom);
-        const intensity = event.ctrlKey ? 0.002 : 0.001;
-        const next = Math.max(minZoom, Math.min(maxZoom, current - event.deltaY * intensity));
-        api.start({ scale: next });
-      }
-    };
-
-    // Add to document with capture to override React's handling
-    document.addEventListener('wheel', handleDocumentWheel, { 
-      passive: false, 
-      capture: true 
-    });
-
-    return () => {
-      document.removeEventListener('wheel', handleDocumentWheel, { 
-        capture: true 
-      });
-    };
-  }, [scale, api, minZoom, maxZoom, initialZoom]);
+  }, [scale, x, y, api, minZoom, maxZoom, initialZoom, calculateBounds]);
 
   const controls = {
-    zoomIn: (factor = 1.5) => {
+    zoomIn: (factor = 1.5, centerPoint = null) => {
       const current = Number(scale.get() ?? initialZoom);
-      const next = Math.min(maxZoom, current * factor);
-      api.start({ scale: Number.isFinite(next) ? next : initialZoom });
+      const newScale = Math.min(maxZoom, current * factor);
+      
+      if (centerPoint) {
+        // Use provided center point (e.g., for button clicks at screen center)
+        const currentX = Number(x.get() ?? 0);
+        const currentY = Number(y.get() ?? 0);
+        const { width, height } = containerBounds;
+        
+        const contentX = (centerPoint.x - width / 2 - currentX) / current;
+        const contentY = (centerPoint.y - height / 2 - currentY) / current;
+        
+        const newX = currentX + (current * contentX) - (newScale * contentX);
+        const newY = currentY + (current * contentY) - (newScale * contentY);
+        
+        api.start({ scale: newScale, x: newX, y: newY });
+      } else {
+        // Default: zoom to center
+        api.start({ scale: Number.isFinite(newScale) ? newScale : initialZoom });
+      }
     },
-    zoomOut: (factor = 1.5) => {
+    zoomOut: (factor = 1.5, centerPoint = null) => {
       const current = Number(scale.get() ?? initialZoom);
-      const next = Math.max(minZoom, current / factor);
-      api.start({ scale: Number.isFinite(next) ? next : initialZoom });
+      const newScale = Math.max(minZoom, current / factor);
+      
+      if (centerPoint) {
+        // Use provided center point
+        const currentX = Number(x.get() ?? 0);
+        const currentY = Number(y.get() ?? 0);
+        const { width, height } = containerBounds;
+        
+        const contentX = (centerPoint.x - width / 2 - currentX) / current;
+        const contentY = (centerPoint.y - height / 2 - currentY) / current;
+        
+        const newX = currentX + (current * contentX) - (newScale * contentX);
+        const newY = currentY + (current * contentY) - (newScale * contentY);
+        
+        api.start({ scale: newScale, x: newX, y: newY });
+      } else {
+        // Default: zoom from center
+        api.start({ scale: Number.isFinite(newScale) ? newScale : initialZoom });
+      }
     },
     reset: () => {
       api.start({ x: 0, y: 0, scale: initialZoom });
@@ -177,12 +255,15 @@ export function InteractiveCanvas({
         {...bind()}
         style={{
           transform: to([x, y, scale], (tx, ty, s) => `translate3d(${tx}px, ${ty}px, 0) scale(${s})`),
-          transformOrigin: 'center center',
+          transformOrigin: '50% 50%', // More explicit than 'center center'
           width: '100%',
           height: '100%',
           cursor: 'grab',
           willChange: 'transform',
-          touchAction: 'none'
+          touchAction: 'none',
+          // Better mobile performance
+          WebkitBackfaceVisibility: 'hidden',
+          backfaceVisibility: 'hidden'
         }}
         onMouseDown={(e) => { e.currentTarget.style.cursor = 'grabbing'; }}
         onMouseUp={(e) => { e.currentTarget.style.cursor = 'grab'; }}
