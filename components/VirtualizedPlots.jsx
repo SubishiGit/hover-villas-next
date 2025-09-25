@@ -7,6 +7,7 @@ export function VirtualizedPlots({
   viewBox, 
   currentZoom, 
   onPlotHover, 
+  onPlotLeave,
   activePlotId 
 }) {
   // For now, we'll render all plots (virtualization can be added later for performance)
@@ -36,6 +37,7 @@ export function VirtualizedPlots({
         width: '100%', 
         height: '100%' 
       }}
+      onMouseLeave={onPlotLeave}
     >
       <g>
         {plots.map((plot) => {
@@ -52,6 +54,7 @@ export function VirtualizedPlots({
                 transition: 'all 0.15s ease-in-out',
               }}
               onMouseEnter={() => onPlotHover(plot)}
+              onMouseLeave={onPlotLeave}
             />
           );
         })}

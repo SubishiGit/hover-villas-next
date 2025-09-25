@@ -8,10 +8,7 @@ export function useProgressiveImage(basePath) {
 
   const imageTiers = useMemo(() => ({
     placeholder: `${basePath}-placeholder.jpg`,
-    small: `${basePath}-small.png`,
-    medium: `${basePath}-medium.png`,
-    large: `${basePath}-large.png`,
-    vector: `${basePath}.svg`
+    original: `${basePath}.png`
   }), [basePath]);
 
   const loadImage = useCallback((src) => {
@@ -28,37 +25,27 @@ export function useProgressiveImage(basePath) {
 
     const loadProgressive = async () => {
       try {
+        // Start with placeholder for instant loading
         setCurrentSrc(imageTiers.placeholder);
 
-        const devicePixelRatio = window.devicePixelRatio || 1;
-        const viewport = window.innerWidth;
-
-        let targetImage;
-        if (viewport > 1920 && devicePixelRatio > 1) {
-          targetImage = imageTiers.large;
-        } else if (viewport > 1200) {
-          targetImage = imageTiers.medium;
-        } else {
-          targetImage = imageTiers.small;
-        }
-
-        const loadedSrc = await loadImage(targetImage);
+        // Load the original full-size image
+        const loadedSrc = await loadImage(imageTiers.original);
         if (mounted) {
           setCurrentSrc(loadedSrc);
           setIsLoading(false);
         }
       } catch {
+        // Fallback to original if placeholder fails
         if (mounted) {
-          setCurrentSrc(imageTiers.small);
+          setCurrentSrc(imageTiers.original);
           setIsLoading(false);
         }
       }
     };
 
-    // Run only once on mount (basePath changes are rare)
     loadProgressive();
     return () => { mounted = false; };
-  }, [basePath, loadImage]); // note: imageTiers intentionally NOT in deps
+  }, [basePath, loadImage, imageTiers.placeholder, imageTiers.original]);
 
   return { currentSrc, isLoading, imageTiers };
 }

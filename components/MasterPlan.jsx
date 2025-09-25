@@ -15,7 +15,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   
   // Progressive image loading
-  const { currentSrc, isLoading } = useProgressiveImage('/BaseLayer');
+  const { currentSrc, isLoading } = useProgressiveImage('/baselayer');
   
   // Track container size for responsive behavior
   useEffect(() => {
@@ -113,9 +113,17 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
     });
   }, [mapData.plots, villaDataMap]);
 
-  // Optimized mouse handlers
+  // Optimized mouse handlers with error handling
   const handleMouseMove = useCallback((e) => {
-    setMousePosition({ x: e.clientX, y: e.clientY });
+    const x = Number.isFinite(e.clientX) ? e.clientX : 0;
+    const y = Number.isFinite(e.clientY) ? e.clientY : 0;
+    setMousePosition({ x, y });
+    
+    // Clear tooltip if mouse is moving over background (not over SVG polygons)
+    // This handles cases where mouse moves to empty areas between polygons
+    if (e.target === e.currentTarget) {
+      setActivePlot(null);
+    }
   }, []);
 
   const handleMouseLeave = useCallback(() => {
@@ -124,6 +132,18 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
 
   const handlePlotHover = useCallback((plot) => {
     setActivePlot(plot);
+  }, []);
+
+  const handlePlotLeave = useCallback(() => {
+    setActivePlot(null);
+  }, []);
+
+  // Safe zoom change handler to prevent NaN values and clear tooltip during zoom
+  const handleZoomChange = useCallback((zoom) => {
+    const safeZoom = Number.isFinite(zoom) && zoom > 0 ? zoom : 1;
+    setCurrentZoom(safeZoom);
+    // Clear tooltip when zooming to avoid stale tooltips
+    setActivePlot(null);
   }, []);
 
   return (
@@ -142,7 +162,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
         minZoom={containerSize.width < 768 ? 0.7 : 0.6}
         maxZoom={containerSize.width < 768 ? 5 : 8}
         initialZoom={containerSize.width < 768 ? 0.8 : 0.9}
-        onZoomChange={setCurrentZoom}
+        onZoomChange={handleZoomChange}
       >
         <div 
           style={{ 
@@ -179,6 +199,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             viewBox={mapData.viewBox}
             currentZoom={currentZoom}
             onPlotHover={handlePlotHover}
+            onPlotLeave={handlePlotLeave}
             activePlotId={activePlot?.id}
           />
         </div>

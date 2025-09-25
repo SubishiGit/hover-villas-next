@@ -107,15 +107,15 @@ export function InteractiveCanvas({
           velocityDisabled: false,
           lockAxisX: false,
           lockAxisY: false,
-          limitToBounds: true, // Add back reasonable bounds
-          padding: isMobile ? 300 : 150, // Simple, generous padding
+          limitToBounds: false, // Remove bounds to test fundamental issue
+          padding: 0, // Remove padding to isolate the core problem
         }}
         doubleClick={{
           disabled: true, // Disable double-click zoom to prevent conflicts
         }}
         onTransformed={handleTransformChange}
-        limitToBounds={true}
-        boundaryFriction={0.1}
+        limitToBounds={false}
+        boundaryFriction={0}
         alignmentAnimation={{
           disabled: false,
           sizeX: 0,
@@ -152,9 +152,6 @@ export function InteractiveCanvas({
             width: '100%',
             height: '100%',
             cursor: 'grab',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
           }}
           contentStyle={{
             width: '100%',

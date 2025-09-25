@@ -65,11 +65,9 @@
   <rect id="_156_" data-name="&amp;lt;156&amp;gt;" x="1846.39" y="1469.38" width="109.7" height="90.43" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <rect id="_157_" data-name="&amp;lt;157&amp;gt;" x="1846.39" y="1379.98" width="109.89" height="89.41" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <rect id="_158_" data-name="&amp;lt;158&amp;gt;" x="1956.27" y="1379.98" width="111.09" height="89.41" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
-  <rect id="_209_" data-name="&amp;lt;209&amp;gt;" x="2883.67" y="380.29" width="110.34" height="89.75" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <rect id="_208_" data-name="&amp;lt;208&amp;gt;" x="2773.35" y="380.29" width="109.51" height="89.75" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <rect id="_206_" data-name="&amp;lt;206&amp;gt;" x="2549.96" y="381.48" width="111.24" height="89.8" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <rect id="_207_" data-name="&amp;lt;207&amp;gt;" x="2661.2" y="380.29" width="110.47" height="90.98" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
-  <rect id="_210_" data-name="&amp;lt;210&amp;gt;" x="2883.67" y="470.03" width="111.53" height="89.06" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <rect id="_211_" data-name="&amp;lt;211&amp;gt;" x="2774.35" y="470.03" width="109.32" height="91.14" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <rect id="_213_" data-name="&amp;lt;213&amp;gt;" x="2551.02" y="471.27" width="110.18" height="89.9" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <rect id="_212_" data-name="&amp;lt;212&amp;gt;" x="2661.2" y="471.27" width="111.84" height="89.9" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
@@ -278,4 +276,6 @@
   <polygon id="_Canal_Landscape_Zone_4_" data-name="&amp;lt;Canal/Landscape Zone 4&amp;gt;" points="1709.28 1622.33 1790.31 1621.87 1791.96 1986.15 1710.93 1986.61 1709.28 1622.33" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <path id="_Canal_Landscape_Zone_5_" data-name="&amp;lt;Canal/Landscape Zone 5&amp;gt;" d="M1710.93,1987.89l1.12,77.28,79.91-78.56-81.03,1.28Z" fill="#dd1f26" opacity=".6" stroke="#231f20" stroke-miterlimit="10"/>
   <rect id="_1_" data-name="&amp;lt;1&amp;gt;" x="707.76" y="1854.89" width="110.76" height="90.2" fill="#dd1f26" stroke="#231f20" stroke-miterlimit="10"/>
+  <path id="_209_" data-name="&amp;lt;209&amp;gt;" d="M2962.86,378.7l79.26-.68,11.62,12.98-14.01,79.04h-156.06l-.81-89.75,80-1.59Z" fill="#dd1f26" stroke="#231f20" stroke-miterlimit="10"/>
+  <path id="_210_" data-name="&amp;lt;210&amp;gt;" d="M2950.9,558.05l66.96-.68,21.86-87.34h-156.86l.81,88.02h67.23Z" fill="#dd1f26" stroke="#231f20" stroke-miterlimit="10"/>
 </svg>
