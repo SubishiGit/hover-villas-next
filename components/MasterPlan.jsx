@@ -139,8 +139,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
       )}
 
       <InteractiveCanvas
-        minZoom={containerSize.width < 768 ? 0.5 : 0.1}
-        maxZoom={containerSize.width < 768 ? 3 : 10}
+        minZoom={containerSize.width < 768 ? 0.7 : 0.6}
+        maxZoom={containerSize.width < 768 ? 5 : 8}
         initialZoom={1}
         bounds="auto"
         onZoomChange={setCurrentZoom}

@@ -26,21 +26,30 @@ export function InteractiveCanvas({
 
   // Custom controls component
   const Controls = () => {
-    const { zoomIn, zoomOut, resetTransform, centerView } = useControls();
+    const { zoomIn, zoomOut, resetTransform, centerView, instance } = useControls();
+    
+    // Get current scale to determine if we're at limits
+    const currentScale = instance?.transformState?.scale || 1;
+    const isAtMaxZoom = currentScale >= maxZoom * 0.95; // 95% threshold for smoother UX
+    const isAtMinZoom = currentScale <= minZoom * 1.05; // 105% threshold for smoother UX
     
     return (
       <div className="absolute top-4 left-4 z-50 flex flex-col gap-2">
         <button 
           onClick={() => zoomIn(0.3)} 
-          className="control-btn" 
+          className={`control-btn ${isAtMaxZoom ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isAtMaxZoom}
           aria-label="Zoom in"
+          title={isAtMaxZoom ? `Maximum zoom reached (${maxZoom}x)` : 'Zoom in'}
         >
           <ZoomInIcon />
         </button>
         <button 
           onClick={() => zoomOut(0.3)} 
-          className="control-btn" 
+          className={`control-btn ${isAtMinZoom ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={isAtMinZoom}
           aria-label="Zoom out"
+          title={isAtMinZoom ? `Minimum zoom reached (${minZoom}x)` : 'Zoom out'}
         >
           <ZoomOutIcon />
         </button>
@@ -48,6 +57,7 @@ export function InteractiveCanvas({
           onClick={() => centerView()} 
           className="control-btn" 
           aria-label="Center view"
+          title="Center and fit to view"
         >
           <FitIcon />
         </button>
@@ -55,6 +65,7 @@ export function InteractiveCanvas({
           onClick={() => resetTransform()} 
           className="control-btn" 
           aria-label="Reset view"
+          title="Reset to original size and position"
         >
           <ResetIcon />
         </button>
@@ -95,7 +106,7 @@ export function InteractiveCanvas({
           lockAxisX: false,
           lockAxisY: false,
           limitToBounds: true, // Prevent image from going completely off-screen
-          padding: isMobile ? 100 : 200, // Allow good range but keep some content visible
+          padding: isMobile ? 400 : 200, // Significantly increased mobile drag range
         }}
         doubleClick={{
           disabled: true, // Disable double-click zoom to prevent conflicts
