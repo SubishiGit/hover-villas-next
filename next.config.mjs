@@ -15,21 +15,7 @@ const nextConfig = {
   onDemandEntries: {
     maxInactiveAge: 25 * 1000,
     pagesBufferLength: 2,
-  },
-  async headers() {
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          { 
-            key: 'Content-Security-Policy', 
-            value: "frame-ancestors https://*.framer.com https://*.framer.website https://subishiserenity.com 'self';" 
-          },
-          // Allow embedding in iframes - do not set X-Frame-Options
-        ],
-      },
-    ];
-  },
+  }
 };
 
 export default nextConfig;
