@@ -88,6 +88,8 @@ export function InteractiveCanvas({
         maxScale={maxZoom}
         centerZoomedOut={true}
         centerOnInit={true}
+        initialPositionX={0}
+        initialPositionY={0}
         wheel={{
           step: 0.3, // Match button zoom step
           smoothStep: 0.01,
@@ -105,15 +107,15 @@ export function InteractiveCanvas({
           velocityDisabled: false,
           lockAxisX: false,
           lockAxisY: false,
-          limitToBounds: true, // Prevent image from going completely off-screen
-          padding: isMobile ? 400 : 200, // Significantly increased mobile drag range
+          limitToBounds: false, // Remove bounds to test fundamental issue
+          padding: 0, // Remove padding to isolate the core problem
         }}
         doubleClick={{
           disabled: true, // Disable double-click zoom to prevent conflicts
         }}
         onTransformed={handleTransformChange}
-        limitToBounds={true}
-        boundaryFriction={0.2}
+        limitToBounds={false}
+        boundaryFriction={0}
         alignmentAnimation={{
           disabled: false,
           sizeX: 0,

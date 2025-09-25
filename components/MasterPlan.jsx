@@ -141,14 +141,16 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
       <InteractiveCanvas
         minZoom={containerSize.width < 768 ? 0.7 : 0.6}
         maxZoom={containerSize.width < 768 ? 5 : 8}
-        initialZoom={1}
-        bounds="auto"
+        initialZoom={containerSize.width < 768 ? 0.8 : 0.9}
         onZoomChange={setCurrentZoom}
       >
         <div 
           style={{ 
             position: 'relative',
-            ...responsiveDimensions
+            width: '100vw',
+            height: '100vh',
+            minWidth: '100%',
+            minHeight: '100%'
           }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
