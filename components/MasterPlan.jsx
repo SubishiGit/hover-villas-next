@@ -5,7 +5,7 @@ import { InteractiveCanvas } from "./InteractiveCanvas";
 import { useProgressiveImage } from "./ImageLoader";
 import { VirtualizedPlots } from "./VirtualizedPlots";
 import { extractVillaKey } from "./idUtil";
-import { AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Tooltip } from "./Tooltip";
 import UILayerPortal from "./UILayerPortal";
 import { Range, getTrackBackground } from "react-range";
@@ -28,6 +28,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   });
   // Track which thumb is active to control z-index so overlapped thumbs work like one control
   const [activeThumb, setActiveThumb] = useState(null); // kept if needed later
+  const [isFilterHover, setIsFilterHover] = useState(false);
   
   // Progressive image loading
   const { currentSrc, isLoading } = useProgressiveImage('/baselayer');
@@ -170,8 +171,10 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   }, [sqftBounds.min, sqftBounds.max, plotSizeBounds.min, plotSizeBounds.max]);
 
   const computeMatchesFromFilters = useCallback((f) => {
-    let any = false;
-    if (f.availability.size || f.facing.size || f.sqftRange || f.plotSizeRange) any = true;
+    // consider ranges active only if narrowed from data bounds
+    const sqftActive = !!(f.sqftRange && (f.sqftRange[0] > (sqftBounds.min ?? 0) || f.sqftRange[1] < (sqftBounds.max ?? 0)));
+    const plotActive = !!(f.plotSizeRange && (f.plotSizeRange[0] > (plotSizeBounds.min ?? 0) || f.plotSizeRange[1] < (plotSizeBounds.max ?? 0)));
+    const any = f.availability.size || f.facing.size || sqftActive || plotActive;
     if (!any) {
       setMatchedPlotIds(new Set());
       setHasActiveFilters(false);
@@ -181,17 +184,13 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
     for (const p of derivedPlots) {
       if (p.plotType !== 'villa') continue;
       const sd = p.sheetData || {};
-      // availability
       if (f.availability.size && !f.availability.has(sd.availability)) continue;
-      // facing
       if (f.facing.size && !f.facing.has(sd.facing)) continue;
-      // sqft
-      if (f.sqftRange) {
+      if (sqftActive) {
         const s = parseNum(sd.sqft);
         if (!(Number.isFinite(s) && s >= f.sqftRange[0] && s <= f.sqftRange[1])) continue;
       }
-      // plot size
-      if (f.plotSizeRange) {
+      if (plotActive) {
         const ps = parseNum(sd.plotSize);
         if (!(Number.isFinite(ps) && ps >= f.plotSizeRange[0] && ps <= f.plotSizeRange[1])) continue;
       }
@@ -199,7 +198,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
     }
     setMatchedPlotIds(ids);
     setHasActiveFilters(ids.size > 0);
-  }, [derivedPlots, parseNum]);
+  }, [derivedPlots, parseNum, sqftBounds.min, sqftBounds.max, plotSizeBounds.min, plotSizeBounds.max]);
 
 
   // Optimized mouse handlers with error handling
@@ -312,29 +311,79 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
         {/* Use pure inline styles to avoid any utility class conflicts */}
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
           {/* Button */}
+          {/* Hover swap: icon-only -> expanded button in same position */}
           <div
-            onClick={() => setShowFilters(!showFilters)}
-            style={{
-              position: 'fixed',
-              top: 24,
-              right: 24,
-              width: 112, // 28 * 4
-              height: 40,
-              backgroundColor: '#2563eb',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 14,
-              fontWeight: 700,
-              borderRadius: 8,
-              boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.1)',
-              cursor: 'pointer',
-              pointerEvents: 'auto',
-              userSelect: 'none'
-            }}
+            onMouseEnter={() => setIsFilterHover(true)}
+            onMouseLeave={() => setIsFilterHover(false)}
+            style={{ position: 'fixed', top: 24, right: 24, pointerEvents: 'auto', height: 36 }}
           >
-            Filter
+            <AnimatePresence initial={false}>
+              {!isFilterHover && (
+                <motion.button
+                  key="icon-only"
+                  onClick={() => setShowFilters(!showFilters)}
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ type: 'spring', stiffness: 140, damping: 16, mass: 0.9, bounce: 0.35 }}
+                  aria-label="Open filters"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    background: 'rgba(20,20,20,0.6)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#ffffff',
+                    width: 36,
+                    height: 36,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="#e5e7eb"/>
+                  </svg>
+                </motion.button>
+              )}
+              {isFilterHover && (
+                <motion.button
+                  key="expanded"
+                  onClick={() => setShowFilters(!showFilters)}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: 'spring', stiffness: 130, damping: 15, mass: 0.95, bounce: 0.3 }}
+                  aria-label="Open filters"
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    background: 'rgba(20,20,20,0.6)',
+                    backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    color: '#ffffff',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '6px 10px',
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="#e5e7eb"/>
+                  </svg>
+                  <span style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>Filter</span>
+                </motion.button>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Panel */}
@@ -344,16 +393,18 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                 position: 'fixed',
                 top: 80,
                 right: 24,
-                width: 224,
-                backgroundColor: '#1f2937',
+                width: 260,
+                background: 'rgba(20,20,20,0.6)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.1)',
                 color: '#ffffff',
-                borderRadius: 8,
-                boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.1)',
+                borderRadius: 12,
+                boxShadow: '0 20px 40px rgba(0,0,0,0.55)',
                 padding: 16,
                 pointerEvents: 'auto'
               }}
             >
-              <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Villa Filters</div>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, letterSpacing: 0.3 }}>Villa Filters</div>
               {/* Availability */}
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 6 }}>Availability</div>
