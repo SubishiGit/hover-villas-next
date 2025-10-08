@@ -16,6 +16,7 @@
     "next": "^15.5.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-range": "^1.8.14",
     "react-virtualized-auto-sizer": "^1.0.26",
     "react-window": "^2.1.1",
     "react-zoom-pan-pinch": "^3.7.0"
