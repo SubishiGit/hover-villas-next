@@ -393,15 +393,17 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                 position: 'fixed',
                 top: 80,
                 right: 24,
-                width: 260,
                 background: 'rgba(20,20,20,0.6)',
                 backdropFilter: 'blur(12px)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 color: '#ffffff',
                 borderRadius: 12,
                 boxShadow: '0 20px 40px rgba(0,0,0,0.55)',
-                padding: 16,
-                pointerEvents: 'auto'
+                padding: 12,
+                pointerEvents: 'auto',
+                width: 'min(260px, 88vw)',
+                maxHeight: '60vh',
+                overflow: 'hidden auto'
               }}
             >
               <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, letterSpacing: 0.3 }}>Villa Filters</div>

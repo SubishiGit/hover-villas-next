@@ -22,8 +22,16 @@ const getStatusStyle = (availability) => {
 export function Tooltip({ activePlot, position, zoomLevel = 1 }) {
   const tooltipRef = useRef(null);
   const [tooltipStyle, setTooltipStyle] = useState({});
+  const [ui, setUi] = useState({ width: 280, pad: 16, title: 16, text: 14 });
 
   useLayoutEffect(() => {
+    // responsive UI sizing
+    const iw = typeof window !== 'undefined' ? window.innerWidth : 1024;
+    if (iw <= 360) setUi({ width: 180, pad: 8, title: 13, text: 11 });
+    else if (iw <= 480) setUi({ width: 200, pad: 10, title: 14, text: 12 });
+    else if (iw <= 768) setUi({ width: 240, pad: 12, title: 15, text: 13 });
+    else setUi({ width: 280, pad: 16, title: 16, text: 14 });
+
     if (activePlot && tooltipRef.current) {
       const { innerWidth, innerHeight } = window;
       const { offsetWidth, offsetHeight } = tooltipRef.current;
@@ -66,26 +74,29 @@ export function Tooltip({ activePlot, position, zoomLevel = 1 }) {
       transition={{ duration: 0.15, ease: "easeOut" }}
     >
       <div style={{ 
-        padding: "16px", 
+        padding: `${ui.pad}px`, 
         background: "rgba(20, 20, 20, 0.6)", 
         backdropFilter: "blur(12px)", 
         border: "1px solid rgba(255,255,255,0.1)", 
         borderRadius: "12px", 
         color: "white", 
         fontFamily: "sans-serif", 
-        width: "280px" 
+        width: `${ui.width}px`,
+        maxWidth: "90vw",
+        maxHeight: "60vh",
+        overflow: "hidden auto"
       }}>
         <h3 style={{ 
-          fontSize: "16px", 
+          fontSize: `${ui.title}px`, 
           fontWeight: "bold", 
           borderBottom: "1px solid rgba(255,255,255,0.1)", 
-          paddingBottom: "8px", 
-          marginBottom: "8px" 
+          paddingBottom: `${Math.max(6, Math.round(ui.pad*0.5))}px`, 
+          marginBottom: `${Math.max(6, Math.round(ui.pad*0.5))}px` 
         }}>
           {titleForPlot(activePlot)}
         </h3>
         {activePlot.plotType === "villa" && activePlot.sheetData ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: "14px" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px", fontSize: `${ui.text}px` }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span>Status</span> 
               <strong style={getStatusStyle(activePlot.sheetData.availability)}>
@@ -118,7 +129,7 @@ export function Tooltip({ activePlot, position, zoomLevel = 1 }) {
             )}
           </div>
         ) : (
-          <div style={{color: "#999", fontSize: "14px"}}>This is a common area.</div>
+          <div style={{color: "#999", fontSize: `${ui.text}px`}}>This is a common area.</div>
         )}
       </div>
     </motion.div>
