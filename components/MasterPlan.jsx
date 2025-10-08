@@ -391,22 +391,22 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             <div
               style={{
                 position: 'fixed',
-                top: 80,
-                right: 24,
+                top: 72,
+                right: 16,
                 background: 'rgba(20,20,20,0.6)',
                 backdropFilter: 'blur(12px)',
                 border: '1px solid rgba(255,255,255,0.1)',
                 color: '#ffffff',
                 borderRadius: 12,
                 boxShadow: '0 20px 40px rgba(0,0,0,0.55)',
-                padding: 12,
                 pointerEvents: 'auto',
-                width: 'min(260px, 88vw)',
-                maxHeight: '60vh',
+                padding: 10,
+                width: 'min(220px, 85vw)',
+                maxHeight: '50vh',
                 overflow: 'hidden auto'
               }}
             >
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12, letterSpacing: 0.3 }}>Villa Filters</div>
+              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10, letterSpacing: 0.2 }}>Villa Filters</div>
               {/* Availability */}
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 6 }}>Availability</div>
