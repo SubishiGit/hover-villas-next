@@ -408,8 +408,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             >
               <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10, letterSpacing: 0.2 }}>Villa Filters</div>
               {/* Availability */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 6 }}>Availability</div>
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>Availability</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {['Available','Sold','Blocked'].map(label => {
                     const isSelected = filters.availability?.has(label);
@@ -432,9 +432,9 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                         style={{
                           backgroundColor: bg,
                           color,
-                          padding: '6px 10px',
-                          borderRadius: 6,
-                          fontSize: 12,
+                        padding: '5px 8px',
+                        borderRadius: 8,
+                        fontSize: 11,
                           fontWeight: 700,
                           cursor: 'pointer'
                         }}
@@ -447,8 +447,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
               </div>
 
               {/* Facing */}
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 6 }}>Facing</div>
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>Facing</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {['East','West','North','South'].map(f => (
                     <div key={f}
@@ -463,9 +463,9 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                       style={{
                         backgroundColor: '#374151',
                         color: '#D1D5DB',
-                        padding: '6px 10px',
-                        borderRadius: 6,
-                        fontSize: 12,
+                        padding: '5px 8px',
+                        borderRadius: 8,
+                        fontSize: 11,
                         fontWeight: 700,
                         cursor: 'pointer',
                         boxShadow: filters.facing?.has(f) ? '0 0 0 2px #10b981 inset' : 'none'
@@ -479,9 +479,9 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
 
             {/* Sq. Ft Range - react-range dual thumb */}
             {(sqftBounds.max > sqftBounds.min) && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 6 }}>Sq. Ft</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>Sq. Ft</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>
                   <span>{Math.round((filters.sqftRange?.[0] ?? sqftBounds.min)).toLocaleString()}</span>
                   <span>{Math.round((filters.sqftRange?.[1] ?? sqftBounds.max)).toLocaleString()}</span>
                 </div>
@@ -543,9 +543,9 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
 
             {/* Plot Size Range (SqYds) - react-range dual thumb */}
             {(plotSizeBounds.max > plotSizeBounds.min) && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 6 }}>Plot Size (SqYds)</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
+              <div style={{ marginBottom: 10 }}>
+                <div style={{ fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>Plot Size (SqYds)</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>
                   <span>{Math.round((filters.plotSizeRange?.[0] ?? plotSizeBounds.min))}</span>
                   <span>{Math.round((filters.plotSizeRange?.[1] ?? plotSizeBounds.max))}</span>
                 </div>
