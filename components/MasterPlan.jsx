@@ -484,7 +484,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
               {containerSize.width >= 768 ? (
                 <>
                   <p style={{ marginBottom: 16 }}>
-                    Hover or click on any villa to view detailed information
+                    <strong style={{ color: '#ffffff' }}>Hover</strong> or <strong style={{ color: '#ffffff' }}>click</strong> on any villa to view detailed information
                   </p>
                   
                   <p style={{ marginBottom: 16 }}>
@@ -492,11 +492,15 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                   </p>
                   
                   <p>
-                    Drag to pan and scroll to zoom
+                    <strong style={{ color: '#ffffff' }}>Drag</strong> to pan and <strong style={{ color: '#ffffff' }}>scroll</strong> to zoom
                   </p>
                 </>
               ) : (
                 <>
+                  <p style={{ marginBottom: 12 }}>
+                    <strong style={{ color: '#ffffff' }}>Please</strong> <strong style={{ color: '#ffffff' }}>turn your phone horizontal</strong> for a better viewing experience
+                  </p>
+                  
                   <p style={{ marginBottom: 12 }}>
                     <strong style={{ color: '#ffffff' }}>Tap villas</strong> for details.
                   </p>
@@ -541,6 +545,37 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
       <UILayerPortal>
         {/* Use pure inline styles to avoid any utility class conflicts */}
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
+          {/* Engineered by Button */}
+          <div style={{ position: 'fixed', top: 24, left: 24, pointerEvents: 'auto', zIndex: 40 }}>
+            <div
+              style={{
+                background: 'rgba(20,20,20,0.6)',
+                backdropFilter: 'blur(12px)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 12,
+                padding: '8px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                color: '#ffffff',
+                fontSize: 12,
+                fontWeight: 600,
+                fontFamily: 'Ubuntu, sans-serif'
+              }}
+            >
+              <span>Engineered by</span>
+              <img 
+                src="/Subishi-White-Logo.png" 
+                alt="Subishi Logo" 
+                style={{ 
+                  height: 16, 
+                  width: 'auto',
+                  filter: 'brightness(0) invert(1)'
+                }}
+              />
+            </div>
+          </div>
+
           {/* Button */}
           {/* Hover swap: icon-only -> expanded button in same position */}
           <div
