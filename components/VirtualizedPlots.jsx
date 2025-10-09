@@ -8,6 +8,7 @@ export function VirtualizedPlots({
   currentZoom, 
   onPlotHover, 
   onPlotLeave,
+  onPlotClick,
   activePlotId,
   matchedPlotIds, // optional Set<string> of plot ids matching filters
   hasActiveFilters = false
@@ -88,6 +89,7 @@ export function VirtualizedPlots({
               }}
               onMouseEnter={() => onPlotHover(plot)}
               onMouseLeave={onPlotLeave}
+              onClick={(e) => onPlotClick && onPlotClick(plot, e)}
             />
           );
         })}

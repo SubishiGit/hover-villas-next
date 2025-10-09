@@ -11,8 +11,8 @@ export default function OrientationLock({ children }) {
       const width = window.innerWidth;
       const height = window.innerHeight;
       
-      // Detect if it's a mobile device (screen width less than 768px)
-      const mobile = width < 768;
+      // Detect if it's a mobile device (screen width less than 900px)
+      const mobile = width < 900;
       
       // Check if portrait (height > width) on mobile
       const portrait = mobile && height > width;

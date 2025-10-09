@@ -16,7 +16,7 @@ export function InteractiveCanvas({
   // Detect mobile for responsive behavior
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 900);
     };
     
     checkMobile();

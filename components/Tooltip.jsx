@@ -19,7 +19,7 @@ const getStatusStyle = (availability) => {
   }
 };
 
-export function Tooltip({ activePlot, position, zoomLevel = 1 }) {
+export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = false, stickyPosition = null, onTooltipHover, onTooltipLeave }) {
   const tooltipRef = useRef(null);
   const [tooltipStyle, setTooltipStyle] = useState({});
   const [ui, setUi] = useState({ width: 280, pad: 16, title: 16, text: 14 });
@@ -29,27 +29,30 @@ export function Tooltip({ activePlot, position, zoomLevel = 1 }) {
     const iw = typeof window !== 'undefined' ? window.innerWidth : 1024;
     if (iw <= 360) setUi({ width: 180, pad: 8, title: 13, text: 11 });
     else if (iw <= 480) setUi({ width: 200, pad: 10, title: 14, text: 12 });
-    else if (iw <= 768) setUi({ width: 240, pad: 12, title: 15, text: 13 });
+    else if (iw <= 900) setUi({ width: 240, pad: 12, title: 15, text: 13 });
     else setUi({ width: 280, pad: 16, title: 16, text: 14 });
 
     if (activePlot && tooltipRef.current) {
       const { innerWidth, innerHeight } = window;
       const { offsetWidth, offsetHeight } = tooltipRef.current;
       
+      // Use sticky position if tooltip is sticky, otherwise use mouse position
+      const currentPosition = tooltipSticky && stickyPosition ? stickyPosition : position;
+      
       // Adjust offset based on zoom level - closer when zoomed in, further when zoomed out
       const baseOffset = 20;
       const zoomAdjustedOffset = Math.max(15, Math.min(40, baseOffset / Math.max(0.5, zoomLevel)));
       
-      let top = position.y + zoomAdjustedOffset;
-      let left = position.x + zoomAdjustedOffset;
+      let top = currentPosition.y + zoomAdjustedOffset;
+      let left = currentPosition.x + zoomAdjustedOffset;
       
       // Enhanced boundary checking with margins
       const margin = 15;
       if (left + offsetWidth > innerWidth - margin) { 
-        left = position.x - offsetWidth - zoomAdjustedOffset; 
+        left = currentPosition.x - offsetWidth - zoomAdjustedOffset; 
       }
       if (top + offsetHeight > innerHeight - margin) { 
-        top = position.y - offsetHeight - zoomAdjustedOffset; 
+        top = currentPosition.y - offsetHeight - zoomAdjustedOffset; 
       }
       
       // Ensure tooltip never goes completely off-screen
@@ -60,18 +63,28 @@ export function Tooltip({ activePlot, position, zoomLevel = 1 }) {
       
       setTooltipStyle({ top, left });
     }
-  }, [activePlot, position, zoomLevel]);
+  }, [activePlot, position, zoomLevel, tooltipSticky, stickyPosition]);
 
   if (!activePlot) return null;
 
   return (
     <motion.div
       ref={tooltipRef}
-      style={{ ...tooltipStyle, position: 'fixed', pointerEvents: 'none', zIndex: 10 }}
+      style={{ 
+        ...tooltipStyle, 
+        position: 'fixed', 
+        pointerEvents: 'auto', 
+        zIndex: 10,
+        // Add small hover zone around tooltip
+        padding: '10px',
+        margin: '-10px'
+      }}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.15, ease: "easeOut" }}
+      onMouseEnter={onTooltipHover}
+      onMouseLeave={onTooltipLeave}
     >
       <div style={{ 
         padding: `${ui.pad}px`, 

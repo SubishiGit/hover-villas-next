@@ -14,6 +14,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   const [activePlot, setActivePlot] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [currentZoom, setCurrentZoom] = useState(1);
+  const [tooltipSticky, setTooltipSticky] = useState(false);
+  const [stickyPosition, setStickyPosition] = useState(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   
   // Simple filter state for future expansion
@@ -46,13 +48,12 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   useEffect(() => {
     const updateBtnUi = () => {
       const w = typeof window !== 'undefined' ? window.innerWidth : 1024;
-      if (w >= 1024) {
-        // Desktop: icon/button 60px
+      if (w >= 900) {
+        // Desktop
         setBtnUi({ icon: 60, btn: 60, padX: 12, padY: 10, gap: 12, font: 18 });
         setInstructionsUi({ 
           title: 28, body: 18, button: 16, padding: 40, maxWidth: 600
         });
-        // Update filter panel size for desktop
         setFilterPanelUi({ 
           width: 320, padding: 20, fontSize: 14, buttonSize: 12
         });
@@ -119,8 +120,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   
   // Calculate responsive dimensions
   const responsiveDimensions = useMemo(() => {
-    const isMobile = containerSize.width < 768;
-    const isTablet = containerSize.width >= 768 && containerSize.width < 1024;
+    const isMobile = containerSize.width < 900;
+    const isTablet = containerSize.width >= 900 && containerSize.width < 1200;
     
     if (isMobile) {
       // Mobile: Use full screen width, let height adjust naturally
@@ -267,16 +268,18 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
 
   // Optimized mouse handlers with error handling
   const handleMouseMove = useCallback((e) => {
-    const x = Number.isFinite(e.clientX) ? e.clientX : 0;
-    const y = Number.isFinite(e.clientY) ? e.clientY : 0;
-    setMousePosition({ x, y });
-    
-    // Clear tooltip if mouse is moving over background (not over SVG polygons)
-    // This handles cases where mouse moves to empty areas between polygons
-    if (e.target === e.currentTarget) {
-      setActivePlot(null);
+    if (!tooltipSticky) {
+      const x = Number.isFinite(e.clientX) ? e.clientX : 0;
+      const y = Number.isFinite(e.clientY) ? e.clientY : 0;
+      setMousePosition({ x, y });
+      
+      // Clear tooltip if mouse is moving over background (not over SVG polygons)
+      // This handles cases where mouse moves to empty areas between polygons
+      if (e.target === e.currentTarget) {
+        setActivePlot(null);
+      }
     }
-  }, []);
+  }, [tooltipSticky]);
 
   // Detect if any filters are applied (independent of whether matches exist)
   const filtersApplied = useMemo(() => {
@@ -355,7 +358,15 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   }, [filtersApplied, filters, btnUi.font, sqftBounds.min, sqftBounds.max, plotSizeBounds.min, plotSizeBounds.max]);
 
   const handleMouseLeave = useCallback(() => {
-    setActivePlot(null);
+    if (!tooltipSticky) {
+      setActivePlot(null);
+    }
+  }, [tooltipSticky]);
+
+  const handleVillaClick = useCallback((plot, event) => {
+    setActivePlot(plot);
+    setStickyPosition({ x: event.clientX, y: event.clientY });
+    setTooltipSticky(true);
   }, []);
 
   const handlePlotHover = useCallback((plot) => {
@@ -363,6 +374,17 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   }, []);
 
   const handlePlotLeave = useCallback(() => {
+    if (!tooltipSticky) {
+      setActivePlot(null);
+    }
+  }, [tooltipSticky]);
+
+  const handleTooltipHover = useCallback(() => {
+    setTooltipSticky(true);
+  }, []);
+
+  const handleTooltipLeave = useCallback(() => {
+    setTooltipSticky(false);
     setActivePlot(null);
   }, []);
 
@@ -387,9 +409,9 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
       )}
 
       <InteractiveCanvas
-        minZoom={containerSize.width < 768 ? 0.7 : 0.6}
-        maxZoom={containerSize.width < 768 ? 5 : 8}
-        initialZoom={containerSize.width < 768 ? 0.8 : 0.9}
+        minZoom={containerSize.width < 900 ? 0.7 : 0.6}
+        maxZoom={containerSize.width < 900 ? 5 : 8}
+        initialZoom={containerSize.width < 900 ? 0.8 : 0.9}
         onZoomChange={handleZoomChange}
       >
         <div 
@@ -428,6 +450,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             currentZoom={currentZoom}
             onPlotHover={handlePlotHover}
             onPlotLeave={handlePlotLeave}
+            onPlotClick={handleVillaClick}
             activePlotId={activePlot?.id}
             matchedPlotIds={matchedPlotIds}
             hasActiveFilters={hasActiveFilters}
@@ -442,6 +465,10 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             activePlot={activePlot} 
             position={mousePosition}
             zoomLevel={currentZoom}
+            tooltipSticky={tooltipSticky}
+            stickyPosition={stickyPosition}
+            onTooltipHover={handleTooltipHover}
+            onTooltipLeave={handleTooltipLeave}
           />
         )}
       </AnimatePresence>
@@ -481,7 +508,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             </h2>
             
             <div style={{ fontSize: instructionsUi.body, lineHeight: 1.6, marginBottom: 24, color: '#D1D5DB' }}>
-              {containerSize.width >= 768 ? (
+              {containerSize.width >= 900 ? (
                 <>
                   <p style={{ marginBottom: 16 }}>
                     <strong style={{ color: '#ffffff' }}>Hover</strong> or <strong style={{ color: '#ffffff' }}>click</strong> on any villa to view detailed information
@@ -546,7 +573,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
         {/* Use pure inline styles to avoid any utility class conflicts */}
         <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
           {/* Engineered by Button - Desktop version */}
-          {containerSize.width >= 768 && (
+          {containerSize.width >= 900 && (
             <div style={{ position: 'fixed', top: 24, left: 24, pointerEvents: 'auto', zIndex: 40 }}>
               <div
                 style={{
@@ -581,12 +608,14 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
 
           {/* Button */}
           {/* Hover swap: icon-only -> expanded button in same position */}
-          <div
-            ref={filterBtnRef}
-            onMouseEnter={() => setIsFilterHover(true)}
-            onMouseLeave={() => setIsFilterHover(false)}
-            style={{ position: 'fixed', top: 24, right: 24, pointerEvents: 'auto', height: 36 }}
-          >
+          {/* Hide filter button on mobile until instructions are dismissed */}
+          {(containerSize.width >= 900 || !showInstructions) && (
+            <div
+              ref={filterBtnRef}
+              onMouseEnter={() => setIsFilterHover(true)}
+              onMouseLeave={() => setIsFilterHover(false)}
+              style={{ position: 'fixed', top: 24, right: 24, pointerEvents: 'auto', height: 36 }}
+            >
             <AnimatePresence initial={false}>
               {!(isFilterHover || (filtersApplied && !showFilters)) && (
                 <motion.button
@@ -665,7 +694,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                 </motion.button>
               )}
             </AnimatePresence>
-          </div>
+            </div>
+          )}
 
           {/* Panel */}
           {showFilters && (
