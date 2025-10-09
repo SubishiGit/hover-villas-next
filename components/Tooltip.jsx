@@ -80,7 +80,7 @@ export function Tooltip({ activePlot, position, zoomLevel = 1 }) {
         border: "1px solid rgba(255,255,255,0.1)", 
         borderRadius: "12px", 
         color: "white", 
-        fontFamily: "sans-serif", 
+        fontFamily: "Ubuntu, sans-serif", 
         width: `${ui.width}px`,
         maxWidth: "90vw",
         maxHeight: "60vh",

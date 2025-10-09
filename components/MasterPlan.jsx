@@ -36,7 +36,11 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   const [btnUi, setBtnUi] = useState({ icon: 18, btn: 36, padX: 8, padY: 6, gap: 8, font: 14 });
   // Responsive sizes for instructions overlay
   const [instructionsUi, setInstructionsUi] = useState({ 
-    title: 20, body: 14, button: 14, padding: 24, maxWidth: 400, arrow: 32 
+    title: 20, body: 14, button: 14, padding: 24, maxWidth: 400
+  });
+  // Responsive sizes for filter panel
+  const [filterPanelUi, setFilterPanelUi] = useState({ 
+    width: 220, padding: 10, fontSize: 12, buttonSize: 10
   });
 
   useEffect(() => {
@@ -46,19 +50,29 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
         // Desktop: icon/button 60px
         setBtnUi({ icon: 60, btn: 60, padX: 12, padY: 10, gap: 12, font: 18 });
         setInstructionsUi({ 
-          title: 28, body: 18, button: 16, padding: 40, maxWidth: 600, arrow: 48 
+          title: 28, body: 18, button: 16, padding: 40, maxWidth: 600
+        });
+        // Update filter panel size for desktop
+        setFilterPanelUi({ 
+          width: 320, padding: 20, fontSize: 14, buttonSize: 12
         });
       } else if (w >= 768) {
         // Tablet
         setBtnUi({ icon: 24, btn: 38, padX: 9, padY: 7, gap: 9, font: 15 });
         setInstructionsUi({ 
-          title: 24, body: 16, button: 15, padding: 32, maxWidth: 500, arrow: 40 
+          title: 24, body: 16, button: 15, padding: 32, maxWidth: 500
+        });
+        setFilterPanelUi({ 
+          width: 260, padding: 16, fontSize: 13, buttonSize: 11
         });
       } else {
         // Mobile
         setBtnUi({ icon: 18, btn: 36, padX: 8, padY: 6, gap: 8, font: 14 });
         setInstructionsUi({ 
-          title: 16, body: 12, button: 12, padding: 16, maxWidth: 300, arrow: 24 
+          title: 16, body: 12, button: 12, padding: 16, maxWidth: 300
+        });
+        setFilterPanelUi({ 
+          width: 220, padding: 10, fontSize: 12, buttonSize: 10
         });
       }
     };
@@ -288,7 +302,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
 
     const facingArr = Array.from(filters.facing || []);
     const facingPart = facingArr.length > 0 ? (
-      <span key="facing" style={{ color: '#D1D5DB' }}>
+      <span key="facing" style={{ color: '#000000' }}>
         {availabilityParts.length ? ' ' : ''}
         {facingArr.join('/')} Facing Villas
       </span>
@@ -300,14 +314,14 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
     const rangeParts = [];
     if (sqftActive) {
       rangeParts.push(
-        <span key="sqft" style={{ color: '#D1D5DB' }}>
+        <span key="sqft" style={{ color: '#000000' }}>
           {`${Math.round(filters.sqftRange[0]).toLocaleString()}–${Math.round(filters.sqftRange[1]).toLocaleString()} Sq. Ft`}
         </span>
       );
     }
     if (plotActive) {
       rangeParts.push(
-        <span key="plot" style={{ color: '#D1D5DB' }}>
+        <span key="plot" style={{ color: '#000000' }}>
           {`${Math.round(filters.plotSizeRange[0])}–${Math.round(filters.plotSizeRange[1])} SqYds`}
         </span>
       );
@@ -324,7 +338,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
       rangeParts.forEach((rp, idx) => {
         pieces.push(
           <span key={`range-${idx}`}>
-            {pieces.length ? <span style={{ color: '#9CA3AF' }}>, </span> : null}
+            {pieces.length ? <span style={{ color: '#000000' }}>, </span> : null}
             {rp}
           </span>
         );
@@ -334,7 +348,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
     if (pieces.length === 0) return null;
 
     return (
-      <span style={{ fontSize: btnUi.font, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <span style={{ fontSize: btnUi.font, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'Ubuntu, sans-serif' }}>
         {pieces}
       </span>
     );
@@ -458,7 +472,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
               width: '90vw',
               color: '#ffffff',
               textAlign: 'center',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+              boxShadow: '0 20px 40px rgba(6,182,212,0.4), 0 0 30px rgba(6,182,212,0.3)',
+              animation: 'filterGlow 2s ease-in-out infinite'
             }}
           >
             <h2 style={{ fontSize: instructionsUi.title, fontWeight: 700, marginBottom: 16, color: '#06b6d4' }}>
@@ -469,15 +484,15 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
               {containerSize.width >= 768 ? (
                 <>
                   <p style={{ marginBottom: 16 }}>
-                    <strong style={{ color: '#ffffff' }}>Hover or click</strong> on any villa to view detailed information including square footage, plot size, availability, and more.
+                    Hover or click on any villa to view detailed information
                   </p>
                   
                   <p style={{ marginBottom: 16 }}>
-                    Use the <strong style={{ color: '#06b6d4' }}>filter button</strong> in the top-right corner to narrow down villas based on your preferences.
+                    Use the <strong style={{ color: '#06b6d4' }}>filter</strong> button in the <strong style={{ color: '#ffffff' }}>top-right</strong> corner
                   </p>
                   
                   <p>
-                    <strong style={{ color: '#ffffff' }}>Drag to pan</strong> and <strong style={{ color: '#ffffff' }}>scroll to zoom</strong> for a closer look at the master plan.
+                    Drag to pan and scroll to zoom
                   </p>
                 </>
               ) : (
@@ -504,7 +519,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                 fontSize: instructionsUi.button,
                 fontWeight: 700,
                 cursor: 'pointer',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                fontFamily: 'Ubuntu, sans-serif'
               }}
               onMouseEnter={(e) => {
                 e.target.style.background = '#0891b2';
@@ -517,42 +533,6 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             >
               Get Started
             </button>
-          </div>
-          
-          {/* Bouncing Arrow pointing to filter button */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 24,
-              right: 24 + btnUi.btn + 20,
-              pointerEvents: 'none',
-              animation: 'bounce 1.5s infinite'
-            }}
-          >
-            <svg
-              width={instructionsUi.arrow}
-              height={instructionsUi.arrow}
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.4))'
-              }}
-            >
-              <path
-                d="M11 7L16 12L11 17"
-                stroke="#06b6d4"
-                strokeWidth="5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M4 12H16"
-                stroke="#06b6d4"
-                strokeWidth="5"
-                strokeLinecap="round"
-              />
-            </svg>
           </div>
         </div>
       )}
@@ -593,8 +573,9 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRadius: 12,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                    cursor: 'pointer'
+                    boxShadow: '0 8px 24px rgba(6,182,212,0.4), 0 0 20px rgba(6,182,212,0.3)',
+                    cursor: 'pointer',
+                    animation: 'filterGlow 2s ease-in-out infinite'
                   }}
                 >
                   <svg width={btnUi.icon} height={btnUi.icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -627,8 +608,9 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     height: btnUi.btn,
                     maxWidth: 'min(70vw, 520px)',
                     borderRadius: 12,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                    cursor: 'pointer'
+                    boxShadow: '0 8px 24px rgba(6,182,212,0.4), 0 0 20px rgba(6,182,212,0.3)',
+                    cursor: 'pointer',
+                    animation: 'filterGlow 2s ease-in-out infinite'
                   }}
                 >
                   <svg width={btnUi.icon} height={btnUi.icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -636,11 +618,11 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                   </svg>
                   {filtersApplied ? (
                     <>
-                      <span style={{ color: '#9CA3AF', fontWeight: 600 }}> = </span>
+                      <span style={{ color: '#000000', fontWeight: 600 }}> = </span>
                       {filterSummaryContent}
                     </>
                   ) : (
-                    <span style={{ fontSize: btnUi.font, fontWeight: 700, whiteSpace: 'nowrap' }}>Filter</span>
+                    <span style={{ fontSize: btnUi.font, fontWeight: 700, whiteSpace: 'nowrap', fontFamily: 'Ubuntu, sans-serif' }}>Filter</span>
                   )}
                 </motion.button>
               )}
@@ -662,16 +644,47 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                 borderRadius: 12,
                 boxShadow: '0 20px 40px rgba(0,0,0,0.55)',
                 pointerEvents: 'auto',
-                padding: 10,
-                width: 'min(220px, 85vw)',
+                padding: filterPanelUi.padding,
+                width: `min(${filterPanelUi.width}px, 85vw)`,
                 maxHeight: '50vh',
                 overflow: 'hidden auto'
               }}
             >
-              <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 10, letterSpacing: 0.2 }}>Villa Filters</div>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                marginBottom: 10 
+              }}>
+                <div style={{ fontSize: filterPanelUi.fontSize, fontWeight: 700, letterSpacing: 0.2, fontFamily: 'Ubuntu, sans-serif' }}>Villa Filters</div>
+                <div
+                  onClick={() => {
+                    const reset = {
+                      availability: new Set(),
+                      facing: new Set(),
+                      sqftRange: sqftBounds.max > sqftBounds.min ? [sqftBounds.min, sqftBounds.max] : null,
+                      plotSizeRange: plotSizeBounds.max > plotSizeBounds.min ? [plotSizeBounds.min, plotSizeBounds.max] : null
+                    };
+                    setFilters(reset);
+                    computeMatchesFromFilters(reset);
+                  }}
+                  style={{
+                    backgroundColor: '#dc2626',
+                    color: '#ffffff',
+                    padding: `${Math.max(4, filterPanelUi.buttonSize - 2)}px ${Math.max(8, filterPanelUi.buttonSize + 2)}px`,
+                    borderRadius: 6,
+                    fontSize: filterPanelUi.buttonSize,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    fontFamily: 'Ubuntu, sans-serif'
+                  }}
+                >
+                  Clear
+                </div>
+              </div>
               {/* Availability */}
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>Availability</div>
+                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>Availability</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {['Available','Sold','Blocked'].map(label => {
                     const isSelected = filters.availability?.has(label);
@@ -694,11 +707,12 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                         style={{
                           backgroundColor: bg,
                           color,
-                        padding: '5px 8px',
+                        padding: `${Math.max(4, filterPanelUi.buttonSize - 2)}px ${Math.max(6, filterPanelUi.buttonSize)}px`,
                         borderRadius: 8,
-                        fontSize: 11,
+                        fontSize: filterPanelUi.buttonSize,
                           fontWeight: 700,
-                          cursor: 'pointer'
+                          cursor: 'pointer',
+                          fontFamily: 'Ubuntu, sans-serif'
                         }}
                       >
                         {label}
@@ -710,7 +724,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
 
               {/* Facing */}
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>Facing</div>
+                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>Facing</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {['East','West','North','South'].map(f => (
                     <div key={f}
@@ -725,12 +739,13 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                       style={{
                         backgroundColor: '#374151',
                         color: '#D1D5DB',
-                        padding: '5px 8px',
+                        padding: `${Math.max(4, filterPanelUi.buttonSize - 2)}px ${Math.max(6, filterPanelUi.buttonSize)}px`,
                         borderRadius: 8,
-                        fontSize: 11,
+                        fontSize: filterPanelUi.buttonSize,
                         fontWeight: 700,
                         cursor: 'pointer',
-                        boxShadow: filters.facing?.has(f) ? '0 0 0 2px #10b981 inset' : 'none'
+                        boxShadow: filters.facing?.has(f) ? '0 0 0 2px #10b981 inset' : 'none',
+                        fontFamily: 'Ubuntu, sans-serif'
                       }}
                     >
                       {f}
@@ -742,8 +757,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             {/* Sq. Ft Range - react-range dual thumb */}
             {(sqftBounds.max > sqftBounds.min) && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>Sq. Ft</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>
+                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>Sq. Ft</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>
                   <span>{Math.round((filters.sqftRange?.[0] ?? sqftBounds.min)).toLocaleString()}</span>
                   <span>{Math.round((filters.sqftRange?.[1] ?? sqftBounds.max)).toLocaleString()}</span>
                 </div>
@@ -806,8 +821,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             {/* Plot Size Range (SqYds) - react-range dual thumb */}
             {(plotSizeBounds.max > plotSizeBounds.min) && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>Plot Size (SqYds)</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#D1D5DB', marginBottom: 6 }}>
+                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>Plot Size (SqYds)</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>
                   <span>{Math.round((filters.plotSizeRange?.[0] ?? plotSizeBounds.min))}</span>
                   <span>{Math.round((filters.plotSizeRange?.[1] ?? plotSizeBounds.max))}</span>
                 </div>
@@ -852,7 +867,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                       <div
                         key={key}
                         {...rest}
-                        style={{
+                style={{
                           ...style,
                           height: 18,
                           width: 18,
@@ -867,31 +882,6 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
               </div>
             )}
 
-              {/* Clear */}
-              <div
-                onClick={() => {
-                  const reset = {
-                    availability: new Set(),
-                    facing: new Set(),
-                    sqftRange: sqftBounds.max > sqftBounds.min ? [sqftBounds.min, sqftBounds.max] : null,
-                    plotSizeRange: plotSizeBounds.max > plotSizeBounds.min ? [plotSizeBounds.min, plotSizeBounds.max] : null
-                  };
-                  setFilters(reset);
-                  computeMatchesFromFilters(reset);
-                }}
-                style={{
-                  backgroundColor: '#dc2626',
-                  color: '#ffffff',
-                  padding: '6px 12px',
-                  borderRadius: 6,
-                  textAlign: 'center',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                Clear
-              </div>
             </div>
           )}
         </div>
