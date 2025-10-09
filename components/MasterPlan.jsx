@@ -34,6 +34,10 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   const panelRef = useRef(null);
   // Responsive sizes for the filter button (desktop gets ~400% scale)
   const [btnUi, setBtnUi] = useState({ icon: 18, btn: 36, padX: 8, padY: 6, gap: 8, font: 14 });
+  // Responsive sizes for instructions overlay
+  const [instructionsUi, setInstructionsUi] = useState({ 
+    title: 20, body: 14, button: 14, padding: 24, maxWidth: 400, arrow: 32 
+  });
 
   useEffect(() => {
     const updateBtnUi = () => {
@@ -41,8 +45,21 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
       if (w >= 1024) {
         // Desktop: icon/button 40px
         setBtnUi({ icon: 40, btn: 40, padX: 10, padY: 8, gap: 10, font: 16 });
+        setInstructionsUi({ 
+          title: 28, body: 18, button: 16, padding: 40, maxWidth: 600, arrow: 48 
+        });
+      } else if (w >= 768) {
+        // Tablet
+        setBtnUi({ icon: 24, btn: 38, padX: 9, padY: 7, gap: 9, font: 15 });
+        setInstructionsUi({ 
+          title: 24, body: 16, button: 15, padding: 32, maxWidth: 500, arrow: 40 
+        });
       } else {
+        // Mobile
         setBtnUi({ icon: 18, btn: 36, padX: 8, padY: 6, gap: 8, font: 14 });
+        setInstructionsUi({ 
+          title: 20, body: 14, button: 14, padding: 24, maxWidth: 400, arrow: 32 
+        });
       }
     };
     updateBtnUi();
@@ -436,19 +453,19 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
               backdropFilter: 'blur(12px)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 16,
-              padding: '32px',
-              maxWidth: '500px',
+              padding: `${instructionsUi.padding}px`,
+              maxWidth: `${instructionsUi.maxWidth}px`,
               width: '90vw',
               color: '#ffffff',
               textAlign: 'center',
               boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
             }}
           >
-            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#06b6d4' }}>
+            <h2 style={{ fontSize: instructionsUi.title, fontWeight: 700, marginBottom: 16, color: '#06b6d4' }}>
               Welcome to Subishi Serenity
             </h2>
             
-            <div style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 24, color: '#D1D5DB' }}>
+            <div style={{ fontSize: instructionsUi.body, lineHeight: 1.6, marginBottom: 24, color: '#D1D5DB' }}>
               <p style={{ marginBottom: 16 }}>
                 <strong style={{ color: '#ffffff' }}>Hover or click</strong> on any villa to view detailed information including square footage, plot size, availability, and more.
               </p>
@@ -470,7 +487,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                 border: 'none',
                 padding: '12px 24px',
                 borderRadius: 8,
-                fontSize: 16,
+                fontSize: instructionsUi.button,
                 fontWeight: 700,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
@@ -499,8 +516,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             }}
           >
             <svg
-              width="48"
-              height="48"
+              width={instructionsUi.arrow}
+              height={instructionsUi.arrow}
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
