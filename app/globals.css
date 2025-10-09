@@ -80,3 +80,16 @@ svg polygon:hover {
   border: 2px solid #ffffff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
+
+/* Bouncing arrow animation for instructions */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}

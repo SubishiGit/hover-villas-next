@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState, useCallback, useEffect } from "react";
+import React, { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { InteractiveCanvas } from "./InteractiveCanvas";
 import { useProgressiveImage } from "./ImageLoader";
 import { VirtualizedPlots } from "./VirtualizedPlots";
@@ -29,6 +29,9 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   // Track which thumb is active to control z-index so overlapped thumbs work like one control
   const [activeThumb, setActiveThumb] = useState(null); // kept if needed later
   const [isFilterHover, setIsFilterHover] = useState(false);
+  const [showInstructions, setShowInstructions] = useState(true);
+  const filterBtnRef = useRef(null);
+  const panelRef = useRef(null);
   // Responsive sizes for the filter button (desktop gets ~400% scale)
   const [btnUi, setBtnUi] = useState({ icon: 18, btn: 36, padX: 8, padY: 6, gap: 8, font: 14 });
 
@@ -62,6 +65,19 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
     window.addEventListener('resize', updateSize);
     return () => window.removeEventListener('resize', updateSize);
   }, []);
+
+  // Close filter panel on click-away (outside button and panel)
+  useEffect(() => {
+    if (!showFilters) return;
+    const handlePointerDown = (e) => {
+      const target = e.target;
+      if (panelRef.current && panelRef.current.contains(target)) return;
+      if (filterBtnRef.current && filterBtnRef.current.contains(target)) return;
+      setShowFilters(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown);
+    return () => document.removeEventListener('pointerdown', handlePointerDown);
+  }, [showFilters]);
   
   // Memoized aspect ratio calculation
   const aspectRatio = useMemo(() => {
@@ -231,6 +247,82 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
     }
   }, []);
 
+  // Detect if any filters are applied (independent of whether matches exist)
+  const filtersApplied = useMemo(() => {
+    const sqftActive = !!(filters.sqftRange && (filters.sqftRange[0] > (sqftBounds.min ?? 0) || filters.sqftRange[1] < (sqftBounds.max ?? 0)));
+    const plotActive = !!(filters.plotSizeRange && (filters.plotSizeRange[0] > (plotSizeBounds.min ?? 0) || filters.plotSizeRange[1] < (plotSizeBounds.max ?? 0)));
+    return (filters.availability?.size || 0) > 0 || (filters.facing?.size || 0) > 0 || sqftActive || plotActive;
+  }, [filters, sqftBounds.min, sqftBounds.max, plotSizeBounds.min, plotSizeBounds.max]);
+
+  // Build a concise summary of applied filters for the button
+  const filterSummaryContent = useMemo(() => {
+    if (!filtersApplied) return null;
+
+    const statusColors = {
+      Available: '#06b6d4',
+      Sold: '#ef4444',
+      Blocked: '#eab308'
+    };
+
+    const availabilityParts = Array.from(filters.availability || [])
+      .map((s) => (
+        <span key={s} style={{ color: statusColors[s] || '#D1D5DB', fontWeight: 700 }}>{s}</span>
+      ));
+
+    const facingArr = Array.from(filters.facing || []);
+    const facingPart = facingArr.length > 0 ? (
+      <span key="facing" style={{ color: '#D1D5DB' }}>
+        {availabilityParts.length ? ' ' : ''}
+        {facingArr.join('/')} Facing Villas
+      </span>
+    ) : null;
+
+    const sqftActive = !!(filters.sqftRange && (filters.sqftRange[0] > (sqftBounds.min ?? 0) || filters.sqftRange[1] < (sqftBounds.max ?? 0)));
+    const plotActive = !!(filters.plotSizeRange && (filters.plotSizeRange[0] > (plotSizeBounds.min ?? 0) || filters.plotSizeRange[1] < (plotSizeBounds.max ?? 0)));
+
+    const rangeParts = [];
+    if (sqftActive) {
+      rangeParts.push(
+        <span key="sqft" style={{ color: '#D1D5DB' }}>
+          {`${Math.round(filters.sqftRange[0]).toLocaleString()}–${Math.round(filters.sqftRange[1]).toLocaleString()} Sq. Ft`}
+        </span>
+      );
+    }
+    if (plotActive) {
+      rangeParts.push(
+        <span key="plot" style={{ color: '#D1D5DB' }}>
+          {`${Math.round(filters.plotSizeRange[0])}–${Math.round(filters.plotSizeRange[1])} SqYds`}
+        </span>
+      );
+    }
+
+    const pieces = [];
+    if (availabilityParts.length) pieces.push(<span key="avail">{availabilityParts.reduce((acc, el, idx) => idx === 0 ? [el] : [...acc, <span key={`sep-a-${idx}`} style={{ color: '#9CA3AF' }}> / </span>, el], [])}</span>);
+    if (facingPart) pieces.push(
+      <span key="facing-wrap">
+        {facingPart}
+      </span>
+    );
+    if (rangeParts.length) {
+      rangeParts.forEach((rp, idx) => {
+        pieces.push(
+          <span key={`range-${idx}`}>
+            {pieces.length ? <span style={{ color: '#9CA3AF' }}>, </span> : null}
+            {rp}
+          </span>
+        );
+      });
+    }
+
+    if (pieces.length === 0) return null;
+
+    return (
+      <span style={{ fontSize: btnUi.font, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {pieces}
+      </span>
+    );
+  }, [filtersApplied, filters, btnUi.font, sqftBounds.min, sqftBounds.max, plotSizeBounds.min, plotSizeBounds.max]);
+
   const handleMouseLeave = useCallback(() => {
     setActivePlot(null);
   }, []);
@@ -323,6 +415,117 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
         )}
       </AnimatePresence>
 
+      {/* Instructions Overlay */}
+      {showInstructions && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.7)',
+            backdropFilter: 'blur(8px)',
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'auto'
+          }}
+        >
+          <div
+            style={{
+              background: 'rgba(20,20,20,0.9)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 16,
+              padding: '32px',
+              maxWidth: '500px',
+              width: '90vw',
+              color: '#ffffff',
+              textAlign: 'center',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+            }}
+          >
+            <h2 style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#06b6d4' }}>
+              Welcome to Subishi Serenity
+            </h2>
+            
+            <div style={{ fontSize: 16, lineHeight: 1.6, marginBottom: 24, color: '#D1D5DB' }}>
+              <p style={{ marginBottom: 16 }}>
+                <strong style={{ color: '#ffffff' }}>Hover or click</strong> on any villa to view detailed information including square footage, plot size, availability, and more.
+              </p>
+              
+              <p style={{ marginBottom: 16 }}>
+                Use the <strong style={{ color: '#06b6d4' }}>filter button</strong> in the top-right corner to narrow down villas based on your preferences.
+              </p>
+              
+              <p>
+                <strong style={{ color: '#ffffff' }}>Drag to pan</strong> and <strong style={{ color: '#ffffff' }}>scroll to zoom</strong> for a closer look at the master plan.
+              </p>
+            </div>
+            
+            <button
+              onClick={() => setShowInstructions(false)}
+              style={{
+                background: '#06b6d4',
+                color: '#000000',
+                border: 'none',
+                padding: '12px 24px',
+                borderRadius: 8,
+                fontSize: 16,
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#0891b2';
+                e.target.style.transform = 'scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#06b6d4';
+                e.target.style.transform = 'scale(1)';
+              }}
+            >
+              Get Started
+            </button>
+          </div>
+          
+          {/* Bouncing Arrow pointing to filter button */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 24,
+              right: 24 + btnUi.btn + 20,
+              pointerEvents: 'none',
+              animation: 'bounce 1.5s infinite'
+            }}
+          >
+            <svg
+              width="48"
+              height="48"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.4))'
+              }}
+            >
+              <path
+                d="M11 7L16 12L11 17"
+                stroke="#06b6d4"
+                strokeWidth="5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M4 12H16"
+                stroke="#06b6d4"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+            </svg>
+          </div>
+        </div>
+      )}
+
       {/* Outer-layer UI via portal with padded position */}
       <UILayerPortal>
         {/* Use pure inline styles to avoid any utility class conflicts */}
@@ -330,12 +533,13 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
           {/* Button */}
           {/* Hover swap: icon-only -> expanded button in same position */}
           <div
+            ref={filterBtnRef}
             onMouseEnter={() => setIsFilterHover(true)}
             onMouseLeave={() => setIsFilterHover(false)}
             style={{ position: 'fixed', top: 24, right: 24, pointerEvents: 'auto', height: 36 }}
           >
             <AnimatePresence initial={false}>
-              {!isFilterHover && (
+              {!(isFilterHover || (filtersApplied && !showFilters)) && (
                 <motion.button
                   key="icon-only"
                   onClick={() => setShowFilters(!showFilters)}
@@ -367,7 +571,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                   </svg>
                 </motion.button>
               )}
-              {isFilterHover && (
+              {(isFilterHover || (filtersApplied && !showFilters)) && (
                 <motion.button
                   key="expanded"
                   onClick={() => setShowFilters(!showFilters)}
@@ -390,6 +594,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     gap: btnUi.gap,
                     padding: `0px ${btnUi.padX}px`,
                     height: btnUi.btn,
+                    maxWidth: 'min(70vw, 520px)',
                     borderRadius: 12,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
                     cursor: 'pointer'
@@ -398,7 +603,14 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                   <svg width={btnUi.icon} height={btnUi.icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="#e5e7eb"/>
                   </svg>
-                  <span style={{ fontSize: btnUi.font, fontWeight: 700, whiteSpace: 'nowrap' }}>Filter</span>
+                  {filtersApplied ? (
+                    <>
+                      <span style={{ color: '#9CA3AF', fontWeight: 600 }}> = </span>
+                      {filterSummaryContent}
+                    </>
+                  ) : (
+                    <span style={{ fontSize: btnUi.font, fontWeight: 700, whiteSpace: 'nowrap' }}>Filter</span>
+                  )}
                 </motion.button>
               )}
             </AnimatePresence>
@@ -407,6 +619,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
           {/* Panel */}
           {showFilters && (
             <div
+              ref={panelRef}
               style={{
                 position: 'fixed',
                 top: 24 + btnUi.btn + 12,
