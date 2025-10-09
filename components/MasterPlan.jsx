@@ -578,38 +578,6 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             </div>
           )}
 
-          {/* Engineered by Button - Mobile version, bottom left, after Get Started */}
-          {containerSize.width < 768 && !showInstructions && (
-            <div style={{ position: 'fixed', bottom: 24, left: 24, pointerEvents: 'auto', zIndex: 40 }}>
-              <div
-                style={{
-                  background: 'rgba(20,20,20,0.6)',
-                  backdropFilter: 'blur(12px)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 8,
-                  padding: '4px 8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  color: '#ffffff',
-                  fontSize: 10,
-                  fontWeight: 600,
-                  fontFamily: 'Ubuntu, sans-serif'
-                }}
-              >
-                <span>Engineered by</span>
-                <img 
-                  src="/Subishi-White-Logo.png" 
-                  alt="Subishi Logo" 
-                  style={{ 
-                    height: 12, 
-                    width: 'auto',
-                    filter: 'brightness(0) invert(1)'
-                  }}
-                />
-              </div>
-            </div>
-          )}
 
           {/* Button */}
           {/* Hover swap: icon-only -> expanded button in same position */}

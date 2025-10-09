@@ -127,6 +127,48 @@ export function Tooltip({ activePlot, position, zoomLevel = 1 }) {
                 <strong>{activePlot.sheetData.plotSize} SqYds</strong>
               </div>
             )}
+            
+            {/* View Floor Plans Button - only for villas */}
+            <button
+              onClick={() => {
+                const facing = activePlot.sheetData?.facing?.toLowerCase();
+                let url = '';
+                
+                if (facing === 'east' || facing === 'south') {
+                  url = 'https://subishiserenity.com/eastfacingplans';
+                } else if (facing === 'west' || facing === 'north') {
+                  url = 'https://subishiserenity.com/westfacingplans';
+                }
+                
+                if (url) {
+                  window.open(url, '_blank');
+                }
+              }}
+              style={{
+                background: '#ffffff',
+                color: '#000000',
+                border: 'none',
+                borderRadius: '8px',
+                padding: `${Math.max(6, Math.round(ui.pad * 0.4))}px ${Math.max(12, Math.round(ui.pad * 0.8))}px`,
+                fontSize: `${ui.text}px`,
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                marginTop: `${Math.max(6, Math.round(ui.pad * 0.4))}px`,
+                width: '100%',
+                fontFamily: 'Ubuntu, sans-serif',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#f0f0f0';
+                e.target.style.transform = 'scale(1.02)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = '#ffffff';
+                e.target.style.transform = 'scale(1)';
+              }}
+            >
+              View Floor Plans
+            </button>
           </div>
         ) : (
           <div style={{color: "#999", fontSize: `${ui.text}px`}}>This is a common area.</div>
