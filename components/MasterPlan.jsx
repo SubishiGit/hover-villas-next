@@ -43,8 +43,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
     const updateBtnUi = () => {
       const w = typeof window !== 'undefined' ? window.innerWidth : 1024;
       if (w >= 1024) {
-        // Desktop: icon/button 40px
-        setBtnUi({ icon: 40, btn: 40, padX: 10, padY: 8, gap: 10, font: 16 });
+        // Desktop: icon/button 60px
+        setBtnUi({ icon: 60, btn: 60, padX: 12, padY: 10, gap: 12, font: 18 });
         setInstructionsUi({ 
           title: 28, body: 18, button: 16, padding: 40, maxWidth: 600, arrow: 48 
         });
@@ -58,7 +58,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
         // Mobile
         setBtnUi({ icon: 18, btn: 36, padX: 8, padY: 6, gap: 8, font: 14 });
         setInstructionsUi({ 
-          title: 20, body: 14, button: 14, padding: 24, maxWidth: 400, arrow: 32 
+          title: 16, body: 12, button: 12, padding: 16, maxWidth: 300, arrow: 24 
         });
       }
     };
@@ -466,17 +466,31 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             </h2>
             
             <div style={{ fontSize: instructionsUi.body, lineHeight: 1.6, marginBottom: 24, color: '#D1D5DB' }}>
-              <p style={{ marginBottom: 16 }}>
-                <strong style={{ color: '#ffffff' }}>Hover or click</strong> on any villa to view detailed information including square footage, plot size, availability, and more.
-              </p>
-              
-              <p style={{ marginBottom: 16 }}>
-                Use the <strong style={{ color: '#06b6d4' }}>filter button</strong> in the top-right corner to narrow down villas based on your preferences.
-              </p>
-              
-              <p>
-                <strong style={{ color: '#ffffff' }}>Drag to pan</strong> and <strong style={{ color: '#ffffff' }}>scroll to zoom</strong> for a closer look at the master plan.
-              </p>
+              {containerSize.width >= 768 ? (
+                <>
+                  <p style={{ marginBottom: 16 }}>
+                    <strong style={{ color: '#ffffff' }}>Hover or click</strong> on any villa to view detailed information including square footage, plot size, availability, and more.
+                  </p>
+                  
+                  <p style={{ marginBottom: 16 }}>
+                    Use the <strong style={{ color: '#06b6d4' }}>filter button</strong> in the top-right corner to narrow down villas based on your preferences.
+                  </p>
+                  
+                  <p>
+                    <strong style={{ color: '#ffffff' }}>Drag to pan</strong> and <strong style={{ color: '#ffffff' }}>scroll to zoom</strong> for a closer look at the master plan.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p style={{ marginBottom: 12 }}>
+                    <strong style={{ color: '#ffffff' }}>Tap villas</strong> for details.
+                  </p>
+                  
+                  <p>
+                    Use <strong style={{ color: '#06b6d4' }}>filter</strong> to search.
+                  </p>
+                </>
+              )}
             </div>
             
             <button
@@ -569,22 +583,22 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     position: 'absolute',
                     top: 0,
                     right: 0,
-                    background: 'rgba(20,20,20,0.6)',
+                    background: 'rgba(255,255,255,0.9)',
                     backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    color: '#ffffff',
+                    border: '1px solid rgba(0,0,0,0.1)',
+                    color: '#000000',
                     width: btnUi.btn,
                     height: btnUi.btn,
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     borderRadius: 12,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
                     cursor: 'pointer'
                   }}
                 >
                   <svg width={btnUi.icon} height={btnUi.icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="#e5e7eb"/>
+                    <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="#000000"/>
                   </svg>
                 </motion.button>
               )}
@@ -602,10 +616,10 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     position: 'absolute',
                     top: 0,
                     right: 0,
-                    background: 'rgba(20,20,20,0.6)',
+                    background: 'rgba(255,255,255,0.9)',
                     backdropFilter: 'blur(12px)',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    color: '#ffffff',
+                    border: '1px solid rgba(0,0,0,0.1)',
+                    color: '#000000',
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: btnUi.gap,
@@ -613,12 +627,12 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     height: btnUi.btn,
                     maxWidth: 'min(70vw, 520px)',
                     borderRadius: 12,
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
                     cursor: 'pointer'
                   }}
                 >
                   <svg width={btnUi.icon} height={btnUi.icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="#e5e7eb"/>
+                    <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="#000000"/>
                   </svg>
                   {filtersApplied ? (
                     <>
