@@ -29,6 +29,23 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   // Track which thumb is active to control z-index so overlapped thumbs work like one control
   const [activeThumb, setActiveThumb] = useState(null); // kept if needed later
   const [isFilterHover, setIsFilterHover] = useState(false);
+  // Responsive sizes for the filter button (desktop gets ~400% scale)
+  const [btnUi, setBtnUi] = useState({ icon: 18, btn: 36, padX: 8, padY: 6, gap: 8, font: 14 });
+
+  useEffect(() => {
+    const updateBtnUi = () => {
+      const w = typeof window !== 'undefined' ? window.innerWidth : 1024;
+      if (w >= 1024) {
+        // Desktop: icon/button 40px
+        setBtnUi({ icon: 40, btn: 40, padX: 10, padY: 8, gap: 10, font: 16 });
+      } else {
+        setBtnUi({ icon: 18, btn: 36, padX: 8, padY: 6, gap: 8, font: 14 });
+      }
+    };
+    updateBtnUi();
+    window.addEventListener('resize', updateBtnUi);
+    return () => window.removeEventListener('resize', updateBtnUi);
+  }, []);
   
   // Progressive image loading
   const { currentSrc, isLoading } = useProgressiveImage('/baselayer');
@@ -335,8 +352,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     backdropFilter: 'blur(12px)',
                     border: '1px solid rgba(255,255,255,0.1)',
                     color: '#ffffff',
-                    width: 36,
-                    height: 36,
+                    width: btnUi.btn,
+                    height: btnUi.btn,
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -345,7 +362,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     cursor: 'pointer'
                   }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <svg width={btnUi.icon} height={btnUi.icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="#e5e7eb"/>
                   </svg>
                 </motion.button>
@@ -370,17 +387,18 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     color: '#ffffff',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 8,
-                    padding: '6px 10px',
+                    gap: btnUi.gap,
+                    padding: `0px ${btnUi.padX}px`,
+                    height: btnUi.btn,
                     borderRadius: 12,
                     boxShadow: '0 8px 24px rgba(0,0,0,0.45)',
                     cursor: 'pointer'
                   }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <svg width={btnUi.icon} height={btnUi.icon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" fill="#e5e7eb"/>
                   </svg>
-                  <span style={{ fontSize: 14, fontWeight: 700, whiteSpace: 'nowrap' }}>Filter</span>
+                  <span style={{ fontSize: btnUi.font, fontWeight: 700, whiteSpace: 'nowrap' }}>Filter</span>
                 </motion.button>
               )}
             </AnimatePresence>
@@ -391,7 +409,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             <div
               style={{
                 position: 'fixed',
-                top: 72,
+                top: 24 + btnUi.btn + 12,
                 right: 16,
                 background: 'rgba(20,20,20,0.6)',
                 backdropFilter: 'blur(12px)',
