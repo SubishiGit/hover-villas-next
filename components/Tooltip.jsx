@@ -27,8 +27,8 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
   useLayoutEffect(() => {
     // responsive UI sizing
     const iw = typeof window !== 'undefined' ? window.innerWidth : 1024;
-    if (iw <= 360) setUi({ width: 180, pad: 8, title: 12, text: 10 });
-    else if (iw <= 450) setUi({ width: 200, pad: 10, title: 13, text: 11 });
+    if (iw <= 360) setUi({ width: 140, pad: 6, title: 10, text: 8 });
+    else if (iw <= 450) setUi({ width: 160, pad: 8, title: 11, text: 9 });
     else if (iw <= 480) setUi({ width: 260, pad: 14, title: 15, text: 13 });
     else if (iw <= 900) setUi({ width: 280, pad: 16, title: 16, text: 14 });
     else setUi({ width: 280, pad: 16, title: 16, text: 14 });
@@ -103,12 +103,12 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
           fontWeight: "bold", 
           borderBottom: "1px solid rgba(255,255,255,0.1)", 
           paddingBottom: `${Math.max(6, Math.round(ui.pad*0.5))}px`, 
-          marginBottom: `${Math.max(6, Math.round(ui.pad*0.5))}px` 
+          marginBottom: `${Math.max(3, Math.round(ui.pad*0.3))}px` 
         }}>
           {titleForPlot(activePlot)}
         </h3>
         {activePlot.plotType === "villa" && activePlot.sheetData ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: `${Math.max(4, Math.round(ui.pad * 0.2))}px`, fontSize: `${ui.text}px` }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: `${Math.max(2, Math.round(ui.pad * 0.15))}px`, fontSize: `${ui.text}px` }}>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
               <span>Status</span> 
               <strong style={getStatusStyle(activePlot.sheetData.availability)}>
@@ -161,11 +161,11 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
                 color: '#000000',
                 border: 'none',
                 borderRadius: '8px',
-                padding: `${Math.max(4, Math.round(ui.pad * 0.3))}px ${Math.max(8, Math.round(ui.pad * 0.6))}px`,
+                padding: `${Math.max(3, Math.round(ui.pad * 0.25))}px ${Math.max(6, Math.round(ui.pad * 0.5))}px`,
                 fontSize: `${ui.text}px`,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                marginTop: `${Math.max(4, Math.round(ui.pad * 0.3))}px`,
+                marginTop: `${Math.max(2, Math.round(ui.pad * 0.2))}px`,
                 width: '100%',
                 fontFamily: 'Ubuntu, sans-serif',
                 transition: 'all 0.2s ease'
