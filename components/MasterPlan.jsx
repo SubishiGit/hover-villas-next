@@ -66,7 +66,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
         setFilterPanelUi({ 
           width: 260, padding: 16, fontSize: 13, buttonSize: 11
         });
-      } else {
+      } else if (w >= 450) {
         // Mobile
         setBtnUi({ icon: 18, btn: 36, padX: 8, padY: 6, gap: 8, font: 14 });
         setInstructionsUi({ 
@@ -74,6 +74,15 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
         });
         setFilterPanelUi({ 
           width: 220, padding: 10, fontSize: 12, buttonSize: 10
+        });
+      } else {
+        // Very small screens (Framer embed)
+        setBtnUi({ icon: 14, btn: 28, padX: 6, padY: 4, gap: 6, font: 11 });
+        setInstructionsUi({ 
+          title: 12, body: 9, button: 9, padding: 12, maxWidth: 200
+        });
+        setFilterPanelUi({ 
+          width: 180, padding: 8, fontSize: 10, buttonSize: 8
         });
       }
     };
@@ -120,10 +129,20 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
   
   // Calculate responsive dimensions
   const responsiveDimensions = useMemo(() => {
-    const isMobile = containerSize.width < 900;
+    const isVerySmall = containerSize.width < 450;
+    const isMobile = containerSize.width >= 450 && containerSize.width < 900;
     const isTablet = containerSize.width >= 900 && containerSize.width < 1200;
     
-    if (isMobile) {
+    if (isVerySmall) {
+      // Very small screens (Framer embed): Use full screen width, let height adjust naturally
+      return {
+        width: '100%',
+        minWidth: 'auto',
+        minHeight: 'auto',
+        maxWidth: 'none',
+        aspectRatio: aspectRatio
+      };
+    } else if (isMobile) {
       // Mobile: Use full screen width, let height adjust naturally
       return {
         width: '100%',
@@ -409,9 +428,9 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
       )}
 
       <InteractiveCanvas
-        minZoom={containerSize.width < 900 ? 0.7 : 0.6}
-        maxZoom={containerSize.width < 900 ? 5 : 8}
-        initialZoom={containerSize.width < 900 ? 0.8 : 0.9}
+        minZoom={containerSize.width < 450 ? 0.8 : containerSize.width < 900 ? 0.7 : 0.6}
+        maxZoom={containerSize.width < 450 ? 3 : containerSize.width < 900 ? 5 : 8}
+        initialZoom={containerSize.width < 450 ? 0.9 : containerSize.width < 900 ? 0.8 : 0.9}
         onZoomChange={handleZoomChange}
       >
         <div 
@@ -522,7 +541,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     <strong style={{ color: '#ffffff' }}>Drag</strong> to pan and <strong style={{ color: '#ffffff' }}>scroll</strong> to zoom
                   </p>
                 </>
-              ) : (
+              ) : containerSize.width >= 450 ? (
                 <>
                   <p style={{ marginBottom: 12 }}>
                     <strong style={{ color: '#ffffff' }}>Please</strong> <strong style={{ color: '#ffffff' }}>turn your phone horizontal</strong> for a better viewing experience
@@ -534,6 +553,20 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                   
                   <p>
                     Use <strong style={{ color: '#06b6d4' }}>filter</strong> to search.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p style={{ marginBottom: 8 }}>
+                    <strong style={{ color: '#ffffff' }}>Tap villas</strong> for details.
+                  </p>
+                  
+                  <p style={{ marginBottom: 8 }}>
+                    Use <strong style={{ color: '#06b6d4' }}>filter</strong> to search.
+                  </p>
+                  
+                  <p>
+                    <strong style={{ color: '#ffffff' }}>Drag</strong> to pan and <strong style={{ color: '#ffffff' }}>scroll</strong> to zoom
                   </p>
                 </>
               )}
@@ -609,7 +642,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
           {/* Button */}
           {/* Hover swap: icon-only -> expanded button in same position */}
           {/* Hide filter button on mobile until instructions are dismissed */}
-          {(containerSize.width >= 900 || !showInstructions) && (
+          {(containerSize.width >= 450 || !showInstructions) && (
             <div
               ref={filterBtnRef}
               onMouseEnter={() => setIsFilterHover(true)}
