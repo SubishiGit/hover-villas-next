@@ -370,7 +370,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
     if (pieces.length === 0) return null;
 
     return (
-      <span style={{ fontSize: btnUi.font, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'Ubuntu, sans-serif' }}>
+      <span style={{ fontSize: btnUi.font, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', fontFamily: 'var(--font-twk-issey), sans-serif' }}>
         {pieces}
       </span>
     );
@@ -584,7 +584,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                 fontWeight: 700,
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
-                fontFamily: 'Ubuntu, sans-serif'
+                fontFamily: 'var(--font-twk-issey), sans-serif'
               }}
               onMouseEnter={(e) => {
                 e.target.style.background = '#0891b2';
@@ -621,7 +621,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                   color: '#ffffff',
                   fontSize: 12,
                   fontWeight: 600,
-                  fontFamily: 'Ubuntu, sans-serif'
+                  fontFamily: 'var(--font-twk-issey), sans-serif'
                 }}
               >
                 <span>Engineered by</span>
@@ -722,7 +722,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                       {filterSummaryContent}
                     </>
                   ) : (
-                    <span style={{ fontSize: btnUi.font, fontWeight: 700, whiteSpace: 'nowrap', fontFamily: 'Ubuntu, sans-serif' }}>Filter</span>
+                    <span style={{ fontSize: btnUi.font, fontWeight: 700, whiteSpace: 'nowrap', fontFamily: 'var(--font-twk-issey), sans-serif' }}>Filter</span>
                   )}
                 </motion.button>
               )}
@@ -757,7 +757,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                 alignItems: 'center', 
                 marginBottom: 10 
               }}>
-                <div style={{ fontSize: filterPanelUi.fontSize, fontWeight: 700, letterSpacing: 0.2, fontFamily: 'Ubuntu, sans-serif' }}>Villa Filters</div>
+                <div style={{ fontSize: filterPanelUi.fontSize, fontWeight: 700, letterSpacing: 0.2, fontFamily: 'var(--font-twk-issey), sans-serif' }}>Villa Filters</div>
                 <div
                   onClick={() => {
                     const reset = {
@@ -777,7 +777,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     fontSize: filterPanelUi.buttonSize,
                     fontWeight: 600,
                     cursor: 'pointer',
-                    fontFamily: 'Ubuntu, sans-serif'
+                    fontFamily: 'var(--font-twk-issey), sans-serif'
                   }}
                 >
                   Clear
@@ -785,7 +785,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
               </div>
               {/* Availability */}
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>Availability</div>
+                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'var(--font-twk-issey), sans-serif' }}>Availability</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {['Available','Sold','Blocked'].map(label => {
                     const isSelected = filters.availability?.has(label);
@@ -813,7 +813,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                         fontSize: filterPanelUi.buttonSize,
                           fontWeight: 700,
                           cursor: 'pointer',
-                          fontFamily: 'Ubuntu, sans-serif'
+                          fontFamily: 'var(--font-twk-issey), sans-serif'
                         }}
                       >
                         {label}
@@ -825,7 +825,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
 
               {/* Facing */}
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>Facing</div>
+                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'var(--font-twk-issey), sans-serif' }}>Facing</div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   {['East','West','North','South'].map(f => (
                     <div key={f}
@@ -846,7 +846,7 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                         fontWeight: 700,
                         cursor: 'pointer',
                         boxShadow: filters.facing?.has(f) ? '0 0 0 2px #10b981 inset' : 'none',
-                        fontFamily: 'Ubuntu, sans-serif'
+                        fontFamily: 'var(--font-twk-issey), sans-serif'
                       }}
                     >
                       {f}
@@ -858,8 +858,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             {/* Sq. Ft Range - react-range dual thumb */}
             {(sqftBounds.max > sqftBounds.min) && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>Sq. Ft</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>
+                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'var(--font-twk-issey), sans-serif' }}>Sq. Ft</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'var(--font-twk-issey), sans-serif' }}>
                   <span>{Math.round((filters.sqftRange?.[0] ?? sqftBounds.min)).toLocaleString()}</span>
                   <span>{Math.round((filters.sqftRange?.[1] ?? sqftBounds.max)).toLocaleString()}</span>
                 </div>
@@ -922,8 +922,8 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
             {/* Plot Size Range (SqYds) - react-range dual thumb */}
             {(plotSizeBounds.max > plotSizeBounds.min) && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>Plot Size (SqYds)</div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'Ubuntu, sans-serif' }}>
+                <div style={{ fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'var(--font-twk-issey), sans-serif' }}>Plot Size (SqYds)</div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: filterPanelUi.fontSize - 1, color: '#D1D5DB', marginBottom: 6, fontFamily: 'var(--font-twk-issey), sans-serif' }}>
                   <span>{Math.round((filters.plotSizeRange?.[0] ?? plotSizeBounds.min))}</span>
                   <span>{Math.round((filters.plotSizeRange?.[1] ?? plotSizeBounds.max))}</span>
                 </div>

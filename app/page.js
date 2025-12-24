@@ -4,7 +4,7 @@ import MasterPlan from "../components/MasterPlan";
 import OrientationLock from "../components/OrientationLock";
 
 async function getSheetData() {
-  const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3001";
+  const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000";
   const url = `${baseUrl}/api/plots`;
   const res = await fetch(url, { cache: 'no-store' });
   if (!res.ok) {

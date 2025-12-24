@@ -19,6 +19,22 @@ const getStatusStyle = (availability) => {
   }
 };
 
+// Helper to get construction status color
+const getConstructionColor = (percentage) => {
+  if (percentage >= 90) return "rgb(52, 211, 153)"; // Green - near complete
+  if (percentage >= 60) return "rgb(251, 191, 36)"; // Amber - good progress
+  if (percentage >= 30) return "rgb(96, 165, 250)"; // Blue - early stages
+  if (percentage > 0) return "rgb(156, 163, 175)"; // Gray - just started
+  return "rgb(107, 114, 128)"; // Dark gray - not started
+};
+
+// Simplify stage name for display
+const simplifyStage = (stageName) => {
+  if (!stageName) return "Not Started";
+  // Remove number prefix "01 Ground Levelling" -> "Ground Levelling"
+  return stageName.replace(/^\d+\s+/, "");
+};
+
 export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = false, stickyPosition = null, onTooltipHover, onTooltipLeave }) {
   const tooltipRef = useRef(null);
   const [tooltipStyle, setTooltipStyle] = useState({});
@@ -30,8 +46,8 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
     if (iw <= 360) setUi({ width: 140, pad: 6, title: 10, text: 8 });
     else if (iw <= 450) setUi({ width: 160, pad: 8, title: 11, text: 9 });
     else if (iw <= 480) setUi({ width: 260, pad: 14, title: 15, text: 13 });
-    else if (iw <= 900) setUi({ width: 280, pad: 16, title: 16, text: 14 });
-    else setUi({ width: 280, pad: 16, title: 16, text: 14 });
+    else if (iw <= 900) setUi({ width: 300, pad: 16, title: 16, text: 14 });
+    else setUi({ width: 320, pad: 16, title: 16, text: 14 });
 
     if (activePlot && tooltipRef.current) {
       const { innerWidth, innerHeight } = window;
@@ -68,6 +84,9 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
 
   if (!activePlot) return null;
 
+  const construction = activePlot.sheetData?.construction;
+  const hasConstruction = construction && construction.completionPercentage !== undefined;
+
   return (
     <motion.div
       ref={tooltipRef}
@@ -94,9 +113,11 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
         border: "1px solid rgba(255,255,255,0.1)", 
         borderRadius: "12px", 
         color: "white", 
-        fontFamily: "Ubuntu, sans-serif", 
+        fontFamily: "var(--font-twk-issey), sans-serif", 
         width: `${ui.width}px`,
-        maxWidth: "90vw"
+        maxWidth: "90vw",
+        letterSpacing: "0.02em",
+        lineHeight: 1.5
       }}>
         <h3 style={{ 
           fontSize: `${ui.title}px`, 
@@ -115,6 +136,99 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
                 {activePlot.sheetData.availability}
               </strong>
             </div>
+
+            {/* CONSTRUCTION PROGRESS SECTION */}
+            {hasConstruction && (
+              <div style={{ 
+                marginTop: `${Math.max(4, Math.round(ui.pad * 0.25))}px`,
+                padding: `${Math.max(6, Math.round(ui.pad * 0.4))}px`,
+                background: "rgba(0,0,0,0.3)",
+                borderRadius: "8px",
+                border: "1px solid rgba(255,255,255,0.05)"
+              }}>
+                {/* Completion Percentage */}
+                {(() => {
+                  // Yellow for in_progress, Green for completed
+                  const percentColor = construction.stageStatus === "in_progress" 
+                    ? "rgb(251, 191, 36)"  // Yellow/Amber
+                    : "rgb(52, 211, 153)"; // Green
+                  return (
+                    <div style={{ 
+                      display: "flex", 
+                      justifyContent: "space-between", 
+                      alignItems: "center",
+                      marginBottom: `${Math.max(4, Math.round(ui.pad * 0.25))}px`
+                    }}>
+                      <span style={{ fontSize: `${ui.text - 1}px`, color: "#D1D5DB" }}>
+                        Construction
+                      </span>
+                      <strong style={{ 
+                        fontSize: `${ui.text + 1}px`,
+                        color: percentColor,
+                        textShadow: `0 0 8px ${percentColor}80`
+                      }}>
+                        {construction.completionPercentage}%
+                      </strong>
+                    </div>
+                  );
+                })()}
+
+                {/* Progress Bar */}
+                {(() => {
+                  // Yellow for in_progress, Green for completed
+                  const barColor = construction.stageStatus === "in_progress" 
+                    ? "rgb(251, 191, 36)"  // Yellow/Amber
+                    : "rgb(52, 211, 153)"; // Green
+                  const percentage = construction.completionPercentage || 0;
+                  // Ensure minimum visible width of 3% when there's any progress
+                  const displayWidth = percentage > 0 ? Math.max(3, percentage) : 0;
+                  return (
+                    <div style={{ 
+                      width: "100%", 
+                      height: `${Math.max(8, Math.round(ui.pad * 0.5))}px`,
+                      background: "rgba(255,255,255,0.15)", 
+                      borderRadius: "4px",
+                      overflow: "hidden",
+                      marginBottom: `${Math.max(4, Math.round(ui.pad * 0.25))}px`
+                    }}>
+                      <div style={{
+                        width: `${displayWidth}%`,
+                        minWidth: percentage > 0 ? "8px" : "0",
+                        height: "100%",
+                        background: barColor,
+                        borderRadius: "4px",
+                        transition: "width 0.3s ease",
+                        boxShadow: `0 0 8px ${barColor}80`
+                      }} />
+                    </div>
+                  );
+                })()}
+
+                {/* Current Stage Status */}
+                <div style={{ 
+                  fontSize: `${ui.text - 1}px`, 
+                  color: "#9CA3AF",
+                  textAlign: "center"
+                }}>
+                  {construction.completionPercentage >= 100 ? (
+                    <span style={{ color: "rgb(52, 211, 153)" }}>✓ Fully Complete</span>
+                  ) : construction.stageStatus === "in_progress" ? (
+                    <span>
+                      <span style={{ color: "rgb(251, 191, 36)" }}>In Progress:</span>{" "}
+                      {simplifyStage(construction.currentStage)}
+                    </span>
+                  ) : construction.stageStatus === "completed" && construction.currentStage ? (
+                    <span>
+                      <span style={{ color: "rgb(52, 211, 153)" }}>Stage Completed:</span>{" "}
+                      {simplifyStage(construction.currentStage)}
+                    </span>
+                  ) : (
+                    <span style={{ color: "#6B7280" }}>Not Started</span>
+                  )}
+                </div>
+              </div>
+            )}
+
             {activePlot.sheetData.type && (
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span>Type</span> 
@@ -167,7 +281,7 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
                 cursor: 'pointer',
                 marginTop: `${Math.max(2, Math.round(ui.pad * 0.2))}px`,
                 width: '100%',
-                fontFamily: 'Ubuntu, sans-serif',
+                fontFamily: 'var(--font-twk-issey), sans-serif',
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
