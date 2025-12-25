@@ -239,7 +239,13 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
             {activePlot.sheetData.type && (
               <div style={{ display: "flex", justifyContent: "space-between" }}>
                 <span>Type</span> 
-                <strong>{activePlot.sheetData.type}</strong>
+                <strong style={
+                  activePlot.sheetData.type.toLowerCase().includes('premium') 
+                    ? { color: "rgb(216, 180, 254)", textShadow: "0 0 8px rgba(216, 180, 254, 0.5)" }
+                    : {}
+                }>
+                  {activePlot.sheetData.type}
+                </strong>
               </div>
             )}
             {activePlot.sheetData.facing && (
