@@ -509,16 +509,17 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
         >
           <div
             style={{
-              background: 'rgba(20,20,20,0.9)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              borderRadius: 16,
+              background: 'rgba(15, 15, 20, 0.85)',
+              backdropFilter: 'blur(24px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: 18,
               padding: `${instructionsUi.padding}px`,
               maxWidth: `${instructionsUi.maxWidth}px`,
               width: '90vw',
               color: '#ffffff',
               textAlign: 'center',
-              boxShadow: '0 20px 40px rgba(6,182,212,0.4), 0 0 30px rgba(6,182,212,0.3)',
+              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset, 0 20px 40px rgba(6,182,212,0.3)',
               animation: 'filterGlow 2s ease-in-out infinite'
             }}
           >
@@ -738,12 +739,13 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                 position: 'fixed',
                 top: 24 + btnUi.btn + 12,
                 right: 16,
-                background: 'rgba(20,20,20,0.6)',
-                backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'rgba(15, 15, 20, 0.75)',
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
                 color: '#ffffff',
-                borderRadius: 12,
-                boxShadow: '0 20px 40px rgba(0,0,0,0.55)',
+                borderRadius: 14,
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset',
                 pointerEvents: 'auto',
                 padding: filterPanelUi.padding,
                 width: `min(${filterPanelUi.width}px, 85vw)`,
@@ -777,8 +779,13 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                     fontSize: filterPanelUi.buttonSize,
                     fontWeight: 600,
                     cursor: 'pointer',
-                    fontFamily: 'var(--font-twk-issey), sans-serif'
+                    fontFamily: 'var(--font-twk-issey), sans-serif',
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: 'scale(1)'
                   }}
+                  onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                  onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 >
                   Clear
                 </div>
@@ -805,16 +812,22 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                             return next;
                           });
                         }}
+                        className="filter-btn-bounce"
                         style={{
                           backgroundColor: bg,
                           color,
-                        padding: `${Math.max(4, filterPanelUi.buttonSize - 2)}px ${Math.max(6, filterPanelUi.buttonSize)}px`,
-                        borderRadius: 8,
-                        fontSize: filterPanelUi.buttonSize,
+                          padding: `${Math.max(4, filterPanelUi.buttonSize - 2)}px ${Math.max(6, filterPanelUi.buttonSize)}px`,
+                          borderRadius: 8,
+                          fontSize: filterPanelUi.buttonSize,
                           fontWeight: 700,
                           cursor: 'pointer',
-                          fontFamily: 'var(--font-twk-issey), sans-serif'
+                          fontFamily: 'var(--font-twk-issey), sans-serif',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          transform: 'scale(1)'
                         }}
+                        onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                        onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                       >
                         {label}
                       </div>
@@ -846,8 +859,13 @@ export default function MasterPlan({ mapData, sheetRows = [] }) {
                         fontWeight: 700,
                         cursor: 'pointer',
                         boxShadow: filters.facing?.has(f) ? '0 0 0 2px #10b981 inset' : 'none',
-                        fontFamily: 'var(--font-twk-issey), sans-serif'
+                        fontFamily: 'var(--font-twk-issey), sans-serif',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        transform: 'scale(1)'
                       }}
+                      onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
+                      onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                     >
                       {f}
                     </div>

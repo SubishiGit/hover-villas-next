@@ -99,19 +99,26 @@ export function Tooltip({ activePlot, position, zoomLevel = 1, tooltipSticky = f
         padding: '10px',
         margin: '-10px'
       }}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.15, ease: "easeOut" }}
+      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.9, y: 10 }}
+      transition={{ 
+        type: "spring", 
+        stiffness: 400, 
+        damping: 25,
+        mass: 0.8
+      }}
       onMouseEnter={onTooltipHover}
       onMouseLeave={onTooltipLeave}
     >
       <div style={{ 
         padding: `${ui.pad}px`, 
-        background: "rgba(20, 20, 20, 0.6)", 
-        backdropFilter: "blur(12px)", 
-        border: "1px solid rgba(255,255,255,0.1)", 
-        borderRadius: "12px", 
+        background: "rgba(15, 15, 20, 0.75)", 
+        backdropFilter: "blur(20px) saturate(180%)", 
+        WebkitBackdropFilter: "blur(20px) saturate(180%)",
+        border: "1px solid rgba(255, 255, 255, 0.08)", 
+        borderRadius: "14px", 
+        boxShadow: "0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.05) inset",
         color: "white", 
         fontFamily: "var(--font-twk-issey), sans-serif", 
         width: `${ui.width}px`,
